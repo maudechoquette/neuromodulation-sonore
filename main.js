@@ -750,7 +750,7 @@ const i18n = {
     en: {
         titre: "Sound-based neuromodulation for chronic tinnitus",
         trouverfreqac : 'Find your tinnitus frequency',
-        trouverfreqhint : 'Sweep the slider and listen to the tones until you can match it to your perceived pitch.',
+        trouverfreqhint : "Sweep the slider and listen to the tones until you can match it to your perceived pitch. Leave the slider on this frequency once you've found it.",
         therapie: 'Type of therapy sound',
         freq_label: 'Frequency (Hz)',
         type_sinus: 'Sine',
@@ -773,7 +773,7 @@ const i18n = {
         base_label: "Basic sounds",
         personnalise_label: "Use my own audio file",
         description_titre: "Sound neuromodulation therapy is a non-invasice and simple method for reducing the perception of chronic tinnitus. Using this software, determine the frequency of your tinnitus and regularly follow the suggested treatments over several months to alleviate it.",
-        choix_therapie: "Choose the type of therapy you wish to pursue",
+        choix_therapie: "Choose the type of therapy you wish to follow.",
         description_tmnmt: "Tailor-made notched music therapy is based on removing a frequency band containing the frequency of your tinnitus from an audio file. You can choose to use the basic sounds offered by the software (white noise, pink noise and other sound waves) or import your own audio file.",
         description_mwt: "Modulated wave therapy is based on the modulation in amplitude, frequency and phase of a sinusoidal signal around the frequency of your tinnitus.",
         description_adt: "Auditory discrimination training involves practicing identifying the higher-pitch sound among two sounds whose frequencies are close to that of your tinnitus.",
@@ -786,7 +786,7 @@ const i18n = {
     fr: {
         titre: "Neuromodulation sonore pour les acouphènes chroniques",
         trouverfreqac: "Déterminez la fréquence de vos acouphènes",
-        trouverfreqhint : "Glissez le curseur et testez les sons jusqu'à trouver la fréquence qui correspond le mieux à vos acouphènes",
+        trouverfreqhint : "Glissez le curseur et testez les sons jusqu'à trouver la fréquence qui correspond le mieux à vos acouphènes. Laissez-le curseur sur cette fréquence lorsque vous l'avez trouvée.",
         therapie: "Type de thérapie sonore",
         freq_label: 'Fréquence (Hz)',
         type_sinus: 'Sinusoïde',
@@ -808,8 +808,8 @@ const i18n = {
         fichier_perso_label: "Chargez votre fichier audio", 
         base_label: "Sons de base",
         personnalise_label: "Utiliser mon propre fichier audio",
-        description_titre: "La thérapie par neuromodulation sonore constitue une méthode non-invasive et simple de diminuer la perception des acouphènes chroniques. À l'aide de ce logiciel, déterminez la fréquence de vos acouphènes et suivez régulièrement, durant plusieurs mois, les traitements proposés afin de les soulager.",
-        choix_therapie: "Choisissez le type de thérapie que vous souhaitez suivre",
+        description_titre: "La thérapie par neuromodulation sonore constitue une méthode non-invasive et simple pour diminuer la perception des acouphènes chroniques. À l'aide de ce logiciel, déterminez la fréquence de vos acouphènes et suivez régulièrement, durant plusieurs mois, les traitements proposés afin de les soulager.",
+        choix_therapie: "Choisissez le type de thérapie que vous souhaitez suivre.",
         description_tmnmt: "La thérapie musicale personnalisée avec suppression de bande fréquentielle se base sur la suppression d'une bande fréquentielle contenant la fréquence de vos acouphènes d'un fichier audio. Vous pouvez choisir d'utiliser les sons de base offerts par le logiciel (bruit blanc, bruit rose et autres ondes), ou d'importer votre propre fichier audio.",
         description_mwt: "La thérapie par sons modulés repose sur la modulation en amplitude, en fréquence et en phase d'un signal sinusoïdal autour de la fréquence de vos acouphènes.",
         description_adt: "L'entraînement à la discrimination auditive consiste à vous pratiquer à repérer le son le plus aigu parmi deux sons dont les fréquences sont proches de celle de vos acouphènes.",
@@ -850,3 +850,4 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
