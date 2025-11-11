@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+
+    <head>
+        <meta charset="utf-8"/> <!--Encodage UTF-8 permet d'écrire en différentes langues-->
+        <meta name="viewport" content="width=device-width, initial-scale=1"/> <!--S'adapte à la largeur de l'écran de l'appareil, permet d'être ouvert avec différents appareils-->
+        <title data-i18n = "titre">Neuromodulation sonore pour les acouphènes chroniques</title>
+        <link rel="stylesheet" href="style.css"/>
+        <link href="https://fonts.googleapis.com/css?family=Fjalla+One&display=swap" rel="stylesheet">
+    </head>
+
+    <body>
+
+        <header>
+            <div class="lang"> <!--L'utilisateur peut choisir la langue (en cliquant sur un bouton) dès qu'il entre sur le site)-->
+                <button data-langue="fr" class="active">FRANÇAIS</button>
+                <button data-langue="en">ENGLISH</button>
+            </div>
+            <h1 class = "title" data-i18n="titre">Neuromodulation sonore pour les acouphènes chroniques</h1>
+            <p class = "description" data-i18n = "description_titre">Description du logiciel</p>
+        </header>
+
+        <main>
+            <section class="card"> <!--Test de pitch-matching-->
+                <h2 data-i18n="trouverfreqac">Déterminez la fréquence des vos acouphènes</h2>
+                <div class="row">
+                    <label for="freq" data-i18n="freq_label">Fréquence (Hz)</label>
+                    <input id="freq" type="range" min="500" max="12000" value="8000" step="1"> <!--Plage de fréquence de 500Hz à 12000Hz pour les acouphènes-->
+                    <output id="freqout">8000 Hz</output>
+                </div>
+                <div class="row">
+                    <button id="choixton">Tester le ton</button>
+                    <select id="typeton">
+                        <option value="sine" data-i18n="type_sinus">Sinusoide</option>
+                        <option value="triangle" data-i18n="type_triangle">Triangulaire</option>
+                        <option value="square" data-i18n="type_carre">Carré</option>
+                        <option value="sawtooth" data-i18n="type_scie">Dents de scie</option>
+                    </select>
+                </div>
+                <p class="hint" data-i18n="trouverfreqhint">Glisser le curseur et testez les sons jusqu'à trouver le fréquence qui correspond le mieux à vos acouphènes.</p>
+            </section>
+
+            <section id="choix-therapie" class="card"> <!--Choix du type de thérapie/neuromodulation à utiliser-->
+                <h2 data-i18n="therapie">Type de neuromodulation</h2>
+                <p class = "hint" data-i18n="choix_therapie">Choisissez le type de thérapie que vous souhaitez suivre</p>
+                <div class="row gap">
+                        <button type = "button" data-mode="TMNMT" data-i18n="TMNMT_label" class="mode-btn active">Tailor-made notched music training</button>
+                        <button type = "button" data-mode="MWT" data-i18n="MWT_label" class="mode-btn">Modulated Wave therapy</button>
+                        <button type = "button" data-mode ="ADT"data-i18n="ADT_label" class="mode-btn">Auditory discrimination training</button>
+                </div>
+            </section>
+
+            <!--TMNMT sélectionnée-->
+            <section id="options-tmnmt" class="card panel">
+                <h3 data-i18n="TMNMT_label"> TMNMT </h3>
+                <p class="hint" data-i18n="description_tmnmt">Description TMNMT</p>
+
+                <div class="mode-tmnmt" style = "margin-bottom : 15px">
+                    <button id = "base" class="mode-tmnmt-button" data-i18n = "base_label" class="active">Sons de base</button>
+                    <button id = "personnalise" class = "mode-tmnmt-button" data-mode = "base" data-i18n="personnalise_label">Utiliser mon propre fichier audio</button>
+                </div>
+
+                <div id = "options-base">
+                    <div class="row"> <!--Choix du type d'onde-->
+                        <label for="type" data-i18n="type_label">Type de son</label>
+                        <select id="type">
+                            <option value="white" data-i18n="bruit_blanc">Bruit blanc</option>
+                            <option value="pink" data-i18n="bruit_rose">Bruit rose</option>
+                            <option value="sine" data-i18n="bruit_sinus">Sinusoide</option>
+                            <option value="triangle" data-i18n="bruit_triangle">Triangle</option>
+                            <option value="square" data-i18n="bruit_carre">Carré</option>
+                            <option value="sawtooth" data-i18n="bruit_scie">Dents de scie</option>
+                        </select>
+                    </div>
+                    <div class="row"> <!--Choix de la durée de la séance d'écoute-->
+                        <label for="duree-tmnmt" data-i18n="duree_label">Durée de la séance d'écoute</label>
+                        <select id="duree-tmnmt">
+                            <option value="10">10 minutes</option>
+                            <option value="20">20 minutes</option>
+                            <option value="30">30 minutes</option>
+                        </select>
+                    </div> 
+                </div>
+
+                <div id = "options-personnalise">
+                    <label for ="fichier-personnalise" data-i18n="fichier_perso_label">Chargez votre fichier audio</label>
+                    <input type = "file" id="fichier-perso" accept="audio">
+                </div>
+
+                <div class = "generation" id="generation-tmnmt">
+                    <button id="bouton-tmnmt" data-i18n="generation_bouton">Démarrer la séance d'écoute</button>
+                    <button id="pause-tmnmt">Pause</button>
+                </div>
+                <span id = "tmnmt_timer">00:00</span>
+                <div id = "tmnmt-rapport"></div>
+            </section>
+                      
+            <!--MWT sélectionnée-->
+            <section id="options-mwt" class="card panel">
+                <h3 data-i18n = "MWT_label">MWT</h3>
+                <p class="hint" data-i18n="description_mwt">Description MWT</p>
+                <div class="row">
+                    <label for="duree-mwt" data-i18n="duree_label">Durée de la séance d'écoute</label>
+                    <select id="duree-mwt">
+                        <option value="10">10 minutes</option>
+                        <option value="20">20 minutes</option>
+                        <option value="30">30 minutes</option>
+                    </select>
+                </div>
+                <div class = "generation" id="generation-mwt">
+                    <button id="bouton-mwt" data-i18n="generation_bouton">Démarrer la séance d'écoute</button>
+                    <button id="pause-mwt">Pause</button>
+                </div>
+                <span id = "mwt_timer">00:00</span>
+                <div id = "mwt-rapport"></div>
+            </section>
+
+            <!--ADT sélectionnée-->
+            <section id="panel-adt" class ="card panel">
+            <h3 data-i18n = "ADT_label">ADT</h3>
+            <p class="hint" data-i18n="description_adt">Description ADT</p>
+                <button id="jeu" data-i18n="commencer_jeu">Commencer le jeu</button>
+                <div id = "options-adt" style="display:none;">
+                <p id = "ecoute" data-i18n="ecouter_jeu">Écouter les deux sons</p>
+                    <button id="son_un" data-i18n="son_un">Premier son</button>
+                    <button id="son_deux" data-i18n="son_deux">Deuxième son</button>
+                <p id="reponse" data-i18n="choisir_son">Choisir le son le plus aigu</p>
+                    <button id="un" data-i18n="son_un">Premier son</button>
+                    <button id="deux" data-i18n="son_deux">Deuxième son</button>
+                <p id="feedback"></p>
+                </div>
+            </section>
+            
+        </main>
+
+        <script src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script type="module" src="main.js"></script>
+    </body>
+</html>
