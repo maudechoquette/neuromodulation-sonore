@@ -668,12 +668,14 @@ function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeS
 
     //Titres (anglais et français)
     doc.setFontSize(16);
-    doc.text("Rapport de séance de neuromodulation sonore", xStart, y);
-    y += lineHeight;
-    doc.text("Sound neuromodulation session report", xStart, y);
-    y += lineHeight * 2;
+    if (langactuelle === "fr){
+        doc.text("Rapport de séance de neuromodulation sonore", xStart, y);
+        y += lineHeight * 2;
+    } else {
+        doc.text("Sound neuromodulation session report", xStart, y);
+        y += lineHeight * 2;
+    }
     
-
     //Date
     doc.setFontSize(10);
     const date = new Date().toLocaleString(langactuelle === 'fr' ? 'fr-FR' : 'en-US');
@@ -683,30 +685,61 @@ function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeS
     //Informations de la séance 
     y += lineHeight;
 
-    doc.text(`Type de thérapie choisie: ${therapie}`, xStart, y);
-    y += lineHeight;
-    doc.text(`Durée de séance choisie: ${dureeChoisie}`, xStart, y);
-    y += lineHeight;
-    doc.text(`Durée d'écoute : ${dureeEcoute}`, xStart, y);
-    y += lineHeight;
-    doc.text(`Fréquence d'acouphènes sélectionnée: ${fAc}`, xStart, y);
-    y += lineHeight *2;
-
-    if (therapie === 'TMNMT'){
-        doc.text(`Mode d'écoute : ${mode}`, xStart, y);
-        y += lineHeight;
-        if (mode === "Sons de base"){
-            doc.text(`Type de son : ${typeSon}`, xStart, y);
+    if (langactuelle === "fr"){
+        if (therapie === 'TMNMT'){
+            doc.text(`Type de thérapie choisie: thérapie musicale personnalisée avec suppression de bande fréquentielle`, xStart, y);
             y += lineHeight;
-        } else if (mode === "Fichier audio importé"){
-            doc.text(`Fichier importé : ${nomFichier}`, xStart, y);
+            doc.text(`Mode d'écoute : ${mode}`, xStart, y);
+            y += lineHeight;
+            if (mode === "Sons de base"){
+                doc.text(`Type de son : ${typeSon}`, xStart, y);
+                y += lineHeight;
+            } else if (mode === "Fichier audio importé"){
+                doc.text(`Fichier importé : ${nomFichier}`, xStart, y);
+                y += lineHeight;
+            }
+        } else if (therapie === 'MWT'){
+            doc.text(`Type de thérapie choisie: thérapie par sons modulés`,xStart, y);
             y += lineHeight;
         }
+        doc.text(`Durée de séance choisie: ${dureeChoisie}`, xStart, y);
+        y += lineHeight;
+        doc.text(`Durée d'écoute : ${dureeEcoute}`, xStart, y);
+        y += lineHeight;
+        doc.text(`Fréquence d'acouphènes sélectionnée: ${fAc}`, xStart, y);
+        y += lineHeight *2;
+    } else {
+        if (therapie === 'TMNMT'){
+            doc.text(`Chosen therapy type: tailor-made notched music training`, xStart, y);
+            y += lineHeight;
+            doc.text(`Mode : ${mode}`, xStart, y);
+            y += lineHeight;
+            if (mode === "Sons de base"){
+                doc.text(`Sound type : ${typeSon}`, xStart, y);
+                y += lineHeight;
+            } else if (mode === "Fichier audio importé"){
+                doc.text(`Imported file : ${nomFichier}`, xStart, y);
+                y += lineHeight;
+            }
+        } else if (therapie === 'MWT'){
+            doc.text(`Chosen therapy type: modulated wave therapy`, xStart, y);
+            y += lineHeight;
+        }
+        doc.text(`Chosen session time: ${dureeChoisie}`, xStart, y);
+        y += lineHeight;
+        doc.text(`Listening time : ${dureeEcoute}`, xStart, y);
+        y += lineHeight;
+        doc.text(`Tinnitus frequency: ${fAc}`, xStart, y);
+        y += lineHeight *2;
     }
 
     //Sauvegarde du fichier
     const datePourNom = new Date().toISOString().slice(0,10);
-    doc.save(`Rapport_seance_${therapie}_${datePourNom}.pdf`);
+    if (langactuelle === "fr"){
+        doc.save(`Rapport_seance_${therapie}_${datePourNom}.pdf`);
+    } else {
+        doc.save(`Session_report_${therapie}_${datePourNom}.pdf`);
+    }
 }
 
 // Changement de langue avec i18n //
@@ -816,3 +849,4 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
