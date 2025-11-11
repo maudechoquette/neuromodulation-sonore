@@ -668,7 +668,7 @@ function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeS
 
     //Titres (anglais et français)
     doc.setFontSize(16);
-    if (langactuelle === "fr){
+    if (langactuelle === "fr"){
         doc.text("Rapport de séance de neuromodulation sonore", xStart, y);
         y += lineHeight * 2;
     } else {
@@ -849,4 +849,5 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
