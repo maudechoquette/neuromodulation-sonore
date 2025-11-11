@@ -742,6 +742,7 @@ function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeS
     }
 }
 
+
 // Changement de langue avec i18n //
 
 //Définition du dictionnaire i18n
@@ -849,5 +850,3 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
-
-
