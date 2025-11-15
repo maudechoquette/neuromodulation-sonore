@@ -6,35 +6,47 @@
 */
 export function dbToLin(db) {return Math.pow(10, db/20);}
 
+/**
+*@class ModulateurAudio 
+* Classe principale qui contient toutes les opérations de traitements audios.
+*/
 export class ModulateurAudio {
     constructor() {
+        //Initialisation des proptiétés internes nécessaires
         this.std = null; //Contexte audio ("studio")
-        this.gain = null; //Gain du signal de sortie
-        this.comp = null; //Compresseur pour eviter les pics de volume et protéger l'utilisateur 
-        this.analyser = null; //Analisateur des sons sortants (feeback) 
+        this.gain = null; //Gain du signal de sortie principal (contrôle le volume global final)
+        this.comp = null; //Compresseur pour éviter les pics de volume et protéger l'audition de l'utilisateur 
+        this.analyser = null; //Analyseur des sons sortants (feeback) 
         this.freqechantillonnage = 48000; //Définition de la fréquence d'échantillonnage (fmax = 24000Hz)
     }
 
+    /**
+    *@async
+    *@method init
+    *Méthode qui initialise le contexte audio et configure la chaîne de traitement audio principale du logiciel:
+    *compresseur > gain global > analyseur > sortie.
+    */
     async init(){
         if (this.std) return;
-        this.std = new AudioContext(); //Création du studio grâce à l'interface AudioContext
-        await this.std.resume();
+        this.std = new AudioContext(); //Création du contexte audio ("studio") grâce à l'interface AudioContext, pour toutes les opérations audios
+        await this.std.resume(); //Démarrage du contexte audio
 
-        this.freqechantillonnage = this.std.sampleRate; //sampleRate est une propriété de AudioContext
+        this.freqechantillonnage = this.std.sampleRate; //Mise à jour de la fréquence d'échantillonnage avec sampleRate, une propriété de AudioContext
 
         this.comp = this.std.createDynamicsCompressor(); //Création du compresseur 
-        this.comp.threshold.setValueAtTime(-18, this.std.currentTime); //Les sons élevés (supérieurs à -18dBFS) sont compressés
+        this.comp.threshold.setValueAtTime(-18, this.std.currentTime); //Compression des sons élevés (supérieurs à -18dBFS)
         this.comp.knee.setValueAtTime(30, this.std.currentTime); //Compression douce pour éviter les coupures brusques
-        this.comp.ratio.setValueAtTime(8, this.std.currentTime); //Augmentation de 1dB pour chaque 8dB au-dessus du seuil
+        this.comp.ratio.setValueAtTime(8, this.std.currentTime); //Ratio 8:1 : Augmentation de 1dB pour chaque 8dB au-dessus du seuil
         this.comp.attack.setValueAtTime(0.003, this.std.currentTime); //Réaction très rapide (0,003s) lorsqu'il y a un pic
         this.comp.release.setValueAtTime(0.25, this.std.currentTime); //Relâche de la compression doucement (0,25s) après un pic 
 
-        this.gain = this.std.createGain(); //Gain appliqué aux sons
-        this.gain.gain.value = dbToLin(-18); //Gain de -18dBFS, soit 12% de la puissance globale
+        this.gain = this.std.createGain(); //Création du noeud de gain (volume global) appliqué aux sons
+        this.gain.gain.value = dbToLin(-18); //Gain de -18dBFS par défaut, soit 12% de la puissance globale
 
         this.analyser = this.std.createAnalyser(); //Création de l'analysateur de son
-        this.analyser.fftSize = 2048;
+        this.analyser.fftSize = 2048; //Résolution de la transformée de Fourier
 
+        //Connexions (chaîne de traitement finale)
         this.comp.connect(this.gain); //Signal sortant du compresseur passe par le gain
         this.gain.connect(this.analyser); //Signal sortant du gain passe par l'analysateur
         this.analyser.connect(this.std.destination); //Signal sortant de l'analysateur est envoyé à la sortie audio  
@@ -383,4 +395,5 @@ export class ModulateurAudio {
         return sortie;
     }
 }
+
 
