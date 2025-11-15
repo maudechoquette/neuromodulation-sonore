@@ -78,8 +78,8 @@ export class ModulateurAudio {
         const g = this.std.createGain(); //Création d'un gain pour le pitch
         g.gain.value = dbToLin(db); //Ajustement du gain
 
-        osc.connect(g); //Connection de l'oscillateur au gain
-        g.connect(this.comp); //Connection du gain au compresseur
+        osc.connect(g); //Connexion de l'oscillateur au gain
+        g.connect(this.comp); //Connexion du gain au compresseur
         osc.start(); //Démarrage de l'oscillateur
         this.sonActuel = {osc, g}; //Enregistrement du son actuel pour pouvoir le modifier
         this.defFreq(freq); //Définition de la fréquence du pitch  
@@ -150,70 +150,78 @@ export class ModulateurAudio {
         this.gain.gain.linearRampToValueAtTime(dbToLin(targetdB), t1); //Application d'une rampe linéaire jusqu'à la valeur visée
         }
 
-    //Création d'une source audio selon le type choisi par l'utilisateur
+    /**
+    *@method creerSourceTherapie
+    *Méthode qui permet de créer une source audio selon le type de son choisi par l'utilisateur pour le TMNMT:
+    *Les types de son possibles sont un bruit blanc (type === "white"), un bruit rose (type === "pink), ou une fonction sinusoidale/carrée/triangle/en dents de scie (type === "sine"/"square"/"triangle"/"sawtooth").
+    *Un bruit rose correspond à un bruit blanc pour lequel les très hautes fréquences sont coupées, et l'amplitude des basses fréquences est augmentée. 
+    *@param {String} type, le type de son choisi par l'utilisateur (type = "white", un bruit blanc, par défaut)
+    *@return {{node: GainNode}, {stopAll: function}}, le noeud de sortie (mix) et une fonction de nottoyage des chaînes de traitement audio. 
+    */
     creerSourceTherapie(type = "white"){ 
-        const mix = this.std.createGain(); //Création du noeud de gain
-        mix.gain.value = 1.0;
+        const mix = this.std.createGain(); //Création du noeud de sortie (gain)
+        mix.gain.value = 1.0; //Gain de 1 par défaut (valeur maximale, sera diminuée lors du passage dans le compresseur)
 
-        const stops = []; //Permet d'arrêter tous les oscillateurs au cas où il y en a plusieurs
-        const connexions = (node) => {
-            node.connect(mix);
-            if (typeof node.start === "function"){
-                try {node.start();} catch {}
+        const stops = []; //Permet d'arrêter tous les oscillateurs au cas où il y en a plusieurs (tableau qui accumule les arrêts)
+        
+        const connexions = (node) => { //Fonction de connexion d'un noeud (buffer, oscillateur, filtre) à la chaîne de traîtement
+            node.connect(mix); //connexion du noeud à la sortie
+            if (typeof node.start === "function"){ //Si le noeud nécessite un démarrage (oscillateur ou buffer)
+                try {node.start();} catch {} //Démarrage du noeud 
             }
-            stops.push(()=> {
-                try {node.stop();} catch {}
-                try{node.disconnect();} catch {}
+            stops.push(()=> { //Déconnexions si un arrêt est demandé
+                try {node.stop();} catch {} //Arrêt de la source 
+                try{node.disconnect();} catch {} //Déceonnection du noeud
             });
         }; 
 
-        if (type === "white"){
-            const src = this.creerSonBlanc(60);
-            connexions(src);
-        } else if (type === "pink"){
-            const src = this.creerSonBlanc(60);
-            const filt = this.std.createBiquadFilter();
-            filt.type = "lowshelf"; //Filtre shelf pour intensifier uniquement les basses fréquences
-            filt.frequency.value = 500;
-            filt.gain.value = +6; //Augmentation de 6dB des fréquences en-dessous de 500Hz
+        if (type === "white"){ //Si un bruit blanc est sélectionné 
+            const src = this.creerSonBlanc(60); //Création d'un buffer avec la méthode dédiée
+            connexions(src); //connexion du buffer à la sortie audio avec la fonction connexions
+            
+        } else if (type === "pink"){ //Si un bruit rose est sélectionné
+            const src = this.creerSonBlanc(60); //Création d'un buffer de son blanc avec la méthode dédiée
+            
+            const lowshelf = this.std.createBiquadFilter(); //Création d'un filtre
+            lowshelf.type = "lowshelf"; //Filtre lowshelf pour intensifier uniquement les basses fréquences
+            lowshelf.frequency.value = 500; //Fréquence de coupure à 500Hz
+            lowshelf.gain.value = +6; //Augmentation de 6dB des fréquences en-dessous de la fréquence de coupure
 
-            const passeBas = this.std.createBiquadFilter();
-            passeBas.type = "lowpass";
-            passeBas.frequency.value = 6000; //Coupure des fréquences supérieures à 6000Hz
-            passeBas.Q.value = 0.7;
+            const passeBas = this.std.createBiquadFilter(); //Création d'un second filtre
+            passeBas.type = "lowpass"; //Filtre passe-bas (lowpass) pour couper les très hautes fréquences
+            passeBas.frequency.value = 6000; //Fréquence de coupure à 6000Hz
+            passeBas.Q.value = 0.7; //Facteur de qualité Q de 0,7 (standard)
 
-            src.connect(filt);
-            filt.connect(passeBas);
-            passeBas.connect(mix);
-            try {src.start();} catch{}
-            stops.push(() => {
+            src.connect(lowshelf); //connexion du buffer au filtre lowshelf
+            lowshelf.connect(passeBas); //connexion de la source filtrée au filtre passe-bas
+            passeBas.connect(mix); //connexion de la source doublement filtrée à la sortie
+            try {src.start();} catch{} //Démarrage de la source
+            stops.push(() => { //Déconnexion de la chaîne de traitement audio en cas d'arrêt
                 try {src.stop();} catch {}
                 try {src.disconnect();} catch {}
                 try {filt.disconnect();} catch {}
                 try {passeBas.disconnect();} catch {}
             });
-        } else {
-            const freqs = [200, 400, 800, 1600, 3200, 6400, 9600, 12000, 24000];
-            for (const f of freqs){
-                const osc = this.std.createOscillator();
-                const gain = this.std.createGain();
-                osc.type = type;
-                osc.frequency.value = f*(1+(Math.random()-0.5)*0.08); //Désynchronisation pour éviter les battements statiques
-                gain.gain.value = 1.0 / freqs.length; //Normalisation du volume
-                osc.connect(gain);
-                gain.connect(mix);
-                try {osc.start();} catch {}
-                stops.push(() => {
+            
+        } else { //Si un son sinusoidal, carré, triangle ou en dents de scie est sélectionné, des oscillateurs de cette forme à différentes fréquences sont démarrés.
+            const freqs = [200, 400, 800, 1600, 3200, 6400, 9600, 12000, 24000]; //Liste des fréquences à utiliser
+            for (const f of freqs){ //Pour chaque fréquence
+                const osc = this.std.createOscillator(); //Création d'un oscillateur
+                const gain = this.std.createGain(); //Création d'un gain pour chaque oscillateur 
+                osc.type = type; //Définition du type de l'oscillateur (forme de l'onde)
+                osc.frequency.value = f*(1+(Math.random()-0.5)*0.08); //Désynchronisation des fréquences pour éviter les battements statiques
+                gain.gain.value = 1.0 / freqs.length; //Normalisation du volume (division par le nombre d'oscillateurs)
+                osc.connect(gain); //Connexion de l'oscillateur et du gain
+                gain.connect(mix); //Connexion du gain à la sortie
+                try {osc.start();} catch {} //Démarrage de l'oscillateure
+                stops.push(() => { //En cas d'arrêt, déconnexion de la chaîne de traitement
                     try {osc.stop(); } catch {}
                     try {gain.disconnect();} catch {}
                 });
             }
         }
 
-        return {
-            node : mix,
-            stopAll : () => {stops.forEach(fn => {try {fn();} catch {}});}
-        };
+        return {node : mix, stopAll : () => {stops.forEach(fn => {try {fn();} catch {}});}}; 
     }
 
     //MWT
@@ -294,7 +302,7 @@ export class ModulateurAudio {
         source_audio.connect(source_gain);
 
         const {notch, lowPeak, highPeak} = await this.ChaineTMNMT_Audio(source_gain, f_ac);
-        //highPeak.connect(this.comp); //Connection au compresseur
+        //highPeak.connect(this.comp); //Connexion au compresseur
 
         this.sonActuel = {type:'fichier', source_audio: source_audio, source_gain: source_gain, notch: notch, lowPeak: lowPeak, highPeak: highPeak};
 
@@ -326,7 +334,7 @@ export class ModulateurAudio {
         src.connect(notch);
         notch.connect(lowPeak);
         lowPeak.connect(highPeak);
-        highPeak.connect(this.comp); //Connection au compresseur
+        highPeak.connect(this.comp); //Connexion au compresseur
         return {notch, lowPeak, highPeak};
     }
 
@@ -356,7 +364,7 @@ export class ModulateurAudio {
         audio_egalise.connect(notch);
         notch.connect(lowPeak);
         lowPeak.connect(highPeak);
-        highPeak.connect(this.comp); //Connection au compresseur
+        highPeak.connect(this.comp); //Connexion au compresseur
         return {notch, lowPeak, highPeak};
     }
 
@@ -387,7 +395,7 @@ export class ModulateurAudio {
         const analyserhaut = this.std.createAnalyser(); 
         analyserbas.fftSize = analyserhaut.fftSize = 512;
 
-        //Connection de la source (fichier audio) > filtres > gains > analyse > sortie
+        //Connexion de la source (fichier audio) > filtres > gains > analyse > sortie
         src_.connect(passebas);
         passebas.connect(gainbas);
         gainbas.connect(analyserbas);
@@ -430,6 +438,7 @@ export class ModulateurAudio {
         return sortie;
     }
 }
+
 
 
 
