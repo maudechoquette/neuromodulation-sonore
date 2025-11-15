@@ -85,19 +85,29 @@ export class ModulateurAudio {
         this.defFreq(freq); //Définition de la fréquence du pitch  
     }
 
+    /**
+    *@method defFreq
+    *Méthode qui permet de changer la fréquence du son joué sans arrêt dans le test de pitch-matching lorsque le curseur est déplacé. 
+    *@param {Number} freq, la nouvelle fréquence visée (définie par le curseur).
+    */
     defFreq(freq){
-        if (!this.sonActuel) return;
-        this.sonActuel.osc.frequency.setTargetAtTime(freq, this.std.currentTime, 0.01);
+        if (!this.sonActuel) return; //Vérification qu'un son est en cours de lecture
+        this.sonActuel.osc.frequency.setTargetAtTime(freq, this.std.currentTime, 0.01); //Rampe exponentielle vers la nouvelle fréquence avec un délai de 0,01 secondes.
     }
 
-    arretSon(){ //Fonction d'arrêt du son
-        if (!this.sonActuel) return; 
-        if (this.sonActuel.osc){ //Si on est en oscillateur
+    /**
+    *@method arretSon
+    *Méthode qui permet l'arrêt du son en sortie. 
+    */
+    arretSon(){ 
+        if (!this.sonActuel) return; //Si aucun son n'est en cours, on sort directement de la fonction
+        if (this.sonActuel.osc){ //Si un son (oscillateur) est en lecture
             const {osc, g} = this.sonActuel;
             try {osc.stop(this.std.currentTime + 0.02); } catch {} //Arrêt de l'oscillateur
-            try {g.disconnect(); } catch {} //Débranchement du gain
-        } else if (this.sonActuel.type === 'fichier'){
+            try {g.disconnect(); } catch {} //Arrêt du gain
+        } else if (this.sonActuel.type === 'fichier'){ //Si le son en cours vient d'un fichier importé par l'utilisateur
             const {source_audio, source_gain, notch, lowPeak, highPeak} = this.sonActuel;
+            //Déconnexion de tous les noeuds de filtrage de la chaîne de traitement (source, gain, et filtres)
             try {source_audio.stop(this.std.currentTime + 0.02); } catch {}
             try {source_gain.disconnect();} catch {}
             try {notch.disconnect();} catch {}
@@ -105,7 +115,7 @@ export class ModulateurAudio {
             try {highPeak.disconnect();} catch {}
         }
 
-        this.sonActuel = null; //Remise à 0 du son
+        this.sonActuel = null; //Réinitialisation du son
     }
 
     creerSonBlanc(dureesec = 60) { //Génération d'un son blanc (qui recommence en boucle)
@@ -407,6 +417,7 @@ export class ModulateurAudio {
         return sortie;
     }
 }
+
 
 
 
