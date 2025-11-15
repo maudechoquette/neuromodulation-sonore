@@ -52,18 +52,30 @@ export class ModulateurAudio {
         this.analyser.connect(this.std.destination); //Signal sortant de l'analysateur est envoyé à la sortie audio  
     }
 
-    setgaindB(db = -18){  //Fonction facilitant le changement du gain
+    /**
+    *@method setgaindB
+    *Méthode qui facilite le changement du gain du signal à l'aide d'une rampe.
+    *@param {Number} db, le gain visé (-18 dBFS par défaut)
+    */
+    setgaindB(db = -18){ 
         if (!this.gain) return;
-        this.gain.gain.setTargetAtTime(dbToLin(db), this.std.currentTime, 0.05)
+        this.gain.gain.setTargetAtTime(dbToLin(db), this.std.currentTime, 0.05) //setTargetAtTime permet d'appliquer une rampe exponentielle vers la nouvelle valeur. Un délai de 0,05 secondes est imposée pour adoucir la transition
     }
 
     // Test de pitch-matching 
+    /**
+    *@method jouerPitch
+    *Méthode qui permet la lecture des tons purs de fréquence, forme d'onde et gain choisis.
+    *@param {Number} freq, la fréquence voulue (8000Hz par défaut)
+    *@param {String} type, la forme d'onde voulue (sinusoide par défaut)
+    *@param {Number] db, le gain (-36 dBFS par défaut)
+    */
     jouerPitch(freq = 8000, type = "sine", db = -36){ //Fonction jouant les sons pour le pitch-matching
         this.arretSon(); //Arrêt d'un son avant d'en jouer un nouveau
         const osc = this.std.createOscillator(); //Création de l'oscillateur
-        osc.type = type; //Choix du type de son
+        osc.type = type; //Choix de la forme du son
 
-        const g = this.std.createGain(); //Création d'un gain pout le pitch
+        const g = this.std.createGain(); //Création d'un gain pour le pitch
         g.gain.value = dbToLin(db); //Ajustement du gain
 
         osc.connect(g); //Connection de l'oscillateur au gain
@@ -395,5 +407,6 @@ export class ModulateurAudio {
         return sortie;
     }
 }
+
 
 
