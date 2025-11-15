@@ -225,42 +225,53 @@ export class ModulateurAudio {
     }
 
     //MWT
+    /** 
+    *@method ChaineMWT
+    *Méthode qui permet la génération d'un signal audio sinusoidal modulé en fonction du protocole de la thérapie par sons modulés.
+    *@param {Number} fc, la fréquence porteuse, qui correspond à la fréquence des acouphènes de l'utilisateur.
+    *@param {Number} ca, l'amplitude de la fréquence porteuse (ca = 1 par défaut)
+    *@param {Number} fm, la fréquence de modulation (fm = 10Hz par défaut)
+    *@param {Number} m, la profondeur de modulation (m = 1 par défaut)
+    *@param {Number} p la phase (p = 0 par défaut)
+    *@returns {{node : GainNode}, {stopAll : function}}, le noeud de sortie final et une fonction de nettoyage de la chaîne de traîtement audio.
+    */
     ChaineMWT(fc, ca = 1, fm = 10, m = 1, p = 0){
-        //On a fc la fréquence porteuse, ca l'amplitude de la fréquence porteuse, fm la fréquence de modulation, m la profondeur de modulation et p la phase
-        const porteuse = this.std.createOscillator();
-        porteuse.type = "sine";
-        porteuse.frequency.value = fc;
+        const porteuse = this.std.createOscillator(); //Création de l'oscillateur pour la fréquence porteuse
+        porteuse.type = "sine"; //Signal sinusoidal (toujours pour MWT)
+        porteuse.frequency.value = fc; //Fréquence porteuse
+        const gainPorteuse = this.std.createGain(); //Création du gain pour l'oscillateur à la fréquence porteuse
+        gainPorteuse.gain.value = ca; //Gain de l'oscillateur (amplitude ca)
+        porteuse.connect(gainPorteuse); //Connexion du gain et de l'oscillateur
 
-        const gainPorteuse = this.std.createGain();
-        gainPorteuse.gain.value = ca;
-        porteuse.connect(gainPorteuse);
-
-        const modulateur = this.std.createOscillator();
-        { //Création d'une fonction cos(2*pi*fm*t + p) = cos(p)cos(2*pi*fm*t) - sin(p)sin(2*pi*fm*t) avec PeriodicWave
-            const reel = new Float32Array(2);
+        const modulateur = this.std.createOscillator(); //Création de l'oscillateur pour la fréquence de modulation
+        
+        {//Création d'une fonction cos(2*pi*fm*t + p) = cos(p)cos(2*pi*fm*t) - sin(p)sin(2*pi*fm*t) avec PeriodicWave afin de pouvoir intégrer la phase 
+        //On note que PeriodicWave est utilisée car l'oscillateur standard ne permet pas de définir de phase. 
+            const reel = new Float32Array(2); //Stockage des coefficients pour l'onde
             const imag = new Float32Array(2);
             reel[1] = Math.cos(p);
             imag[1] = -Math.sin(p);
-            const pw = this.std.createPeriodicWave(reel, imag, {disableNormalization:true});
-            modulateur.setPeriodicWave(pw);
-            modulateur.frequency.value = fm;
+            const pw = this.std.createPeriodicWave(reel, imag, {disableNormalization:true}); //Création de l'onde
+            modulateur.setPeriodicWave(pw); //Connexion de l'onde personnalisée avec phase à l'oscillateur de modulation
+            modulateur.frequency.value = fm; //Définition de la fréquence de modulation
         }
 
-        const profondeur = this.std.createGain();
-        profondeur.gain.value = m;
-        modulateur.connect(profondeur);
+        const profondeur = this.std.createGain(); //Définition de la profondeur de l'oscillateur de modulation (gain)
+        profondeur.gain.value = m; 
+        modulateur.connect(profondeur); //Connexion du gain et de l'oscillateur 
 
-        const multiplication = this.std.createGain();
-        multiplication.gain.value = 0;
-        profondeur.connect(multiplication.gain);
-        gainPorteuse.connect(multiplication);
+        const multiplication = this.std.createGain(); //Noeud final (multiplication des deux oscillateurs)
+        multiplication.gain.value = 0; //Initalisation à 0
+        profondeur.connect(multiplication.gain); //Connexion du gain de modulation (profondeur de modulation) au gain principal (multiplication)
+        gainPorteuse.connect(multiplication); //Connexion du gain de la fréquence porteuse au gain principal 
 
+        //Démarrage des deux oscillateurs
         modulateur.start();
         porteuse.start();
 
         return {
-            node:multiplication,
-            stopAll:() => {
+            node:multiplication, //Noeud de sortie 
+            stopAll:() => { //Déconnxion de toute la chaîne en cas d'arrêt
                 try {porteuse.stop(); } catch {}
                 try {modulateur.stop();} catch {}
                 try {porteuse.disconnect();} catch {}
@@ -438,6 +449,7 @@ export class ModulateurAudio {
         return sortie;
     }
 }
+
 
 
 
