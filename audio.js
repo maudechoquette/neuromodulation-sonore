@@ -1,4 +1,11 @@
+/**
+* Fonction de conversion d'une valeur en dB (décibels) en une valeur d'amplitude linéaire (0 à 1), car le Web Audio API
+* utilise des valeurs linéaires pour les gains. La formule de conversion est 10^(db/20), avec db la valeur en décibels.
+* @param {Number} db, la valeur en décibels à convertir.
+* @returns {Number} la valeur d'amplitude correspondante.
+*/
 export function dbToLin(db) {return Math.pow(10, db/20);}
+
 export class ModulateurAudio {
     constructor() {
         this.std = null; //Contexte audio ("studio")
@@ -376,3 +383,4 @@ export class ModulateurAudio {
         return sortie;
     }
 }
+
