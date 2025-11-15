@@ -118,23 +118,36 @@ export class ModulateurAudio {
         this.sonActuel = null; //Réinitialisation du son
     }
 
+    /**
+    *@method creerSonBlanc
+    *Méthode de création d'un bruit blanc. Un bruit blanc correspond à un signal aléatoire comportant toutes les fréquences audibles, pour lesquelles l'énergie est également répartie.
+    *@param {Number} dureesec, la durée en secondes du buffer créé (dureesec = 60s par défaut), qui pourra être joué en boucle.
+    *@returns {AudioBufferSourceNode}, le noeud source contenant le bruit blanc. 
+    */
     creerSonBlanc(dureesec = 60) { //Génération d'un son blanc (qui recommence en boucle)
-        const echantillons = Math.floor(this.std.sampleRate * dureesec); //Calcul du nombre d'échantillons à générer
+        const echantillons = Math.floor(this.std.sampleRate * dureesec); //Calcul du nombre d'échantillons à générer en fonction de la fréquence d'échantillonnage et de la durée en secondes
         const buffer = this.std.createBuffer(1, echantillons, this.std.sampleRate); //Création du buffer 
-        const d = buffer.getChannelData(0);
-        for (let i = 0; i < echantillons; i++) d[i] = (Math.random()*2-1)*0.35; //Génération d'une séquence de valeurs aléatoires entre -1 et 1
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < echantillons; i++) data[i] = (Math.random()*2-1)*0.35; //Génération d'une séquence de valeurs aléatoires entre -0,35 et 0,35 (35% de l'amplitude maximale pour la sécurité)
         const src = this.std.createBufferSource(); //Création de la source audio qui lit le buffer
         src.buffer = buffer;
-        src.loop = true;
+        src.loop = true; //Permet la lecture en continu (boucle)
         return src;
-    } //À revoir
+    } 
 
-    transitionGain(targetDb = -60, dureetrans = 0.4) { //Transition à la fin des sons pour éviter une coupure brusque
-        const t0 = this.std.currentTime;
-        const t1 = t0 + dureetrans;
-        this.gain.gain.cancelScheduledValues(t0); //Supprimes les changements de volume déjà programmés
-        this.gain.gain.setValueAtTime(this.gain.gain.value, t0);
-        this.gain.gain.linearRampToValueAtTime(Math.pow(10, targetDb/20), t1);
+    /**
+    *@method transitionGain
+    *Méthode qui permet de couper doucement le gain à la fin des sons pour éviter une coupure brusque. 
+    *@param {Number} targetdB, la valeur de gain visée (-60 dBFS par défaut).
+    *@param {Number} dureetrans, la valeur de durée de transition en secondes voulue (0,4 secondes par défaut). 
+    */
+    transitionGain(targetdB = -60, dureetrans = 0.4) { //Transition à la fin des sons pour éviter une coupure brusque
+        const t0 = this.std.currentTime; //Moment de début de la transition
+        const t1 = t0 + dureetrans; //Moment de fin de la transition
+        
+        this.gain.gain.cancelScheduledValues(t0); //Suppression des changements de volume déjà programmés
+        this.gain.gain.setValueAtTime(this.gain.gain.value, t0); //Démarrage de la rampe à la valeur actuelle du gain
+        this.gain.gain.linearRampToValueAtTime(dbToLin(targetdB), t1); //Application d'une rampe linéaire jusqu'à la valeur visée
         }
 
     //Création d'une source audio selon le type choisi par l'utilisateur
@@ -417,6 +430,7 @@ export class ModulateurAudio {
         return sortie;
     }
 }
+
 
 
 
