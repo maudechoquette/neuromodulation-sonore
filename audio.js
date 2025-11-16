@@ -233,7 +233,7 @@ export class ModulateurAudio {
     *@param {Number} fm, la fréquence de modulation (fm = 10Hz par défaut)
     *@param {Number} m, la profondeur de modulation (m = 1 par défaut)
     *@param {Number} p la phase (p = 0 par défaut)
-    *@returns {{node : GainNode}, {stopAll : function}}, le noeud de sortie final et une fonction de nettoyage de la chaîne de traîtement audio.
+    *@returns {{node : GainNode}, {stopAll : function}}, le noeud de sortie final (signal sinusoidal modulé) et une fonction de nettoyage de la chaîne de traîtement audio.
     */
     ChaineMWT(fc, ca = 1, fm = 10, m = 1, p = 0){
         const porteuse = this.std.createOscillator(); //Création de l'oscillateur pour la fréquence porteuse
@@ -284,73 +284,53 @@ export class ModulateurAudio {
     }
 
     // TMNMT
-
-    // Utilisation d'un fichier audio déposé par l'utilisateur
-    
-    async ModulerAudio(fichier_source, f_ac){
-        this.arretSon(); //Arrêt des sons en cours
-        if (!this.std){await this.init();} //Vérification que l'audioContext est prêt
-
-        // Récupération du fichier audio source déposé (forme brut)
-        const arrayBuffer = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsArrayBuffer(fichier_source);
-        });
-
-        // Décodage du array buffer qui contient le fichier audio 
-        const buffer = await this.std.decodeAudioData(arrayBuffer).catch(error => {console.error("Erreur", error); throw error});
-        
-        // Lecture du son (lecture des données du buffer)
-        const source_audio = this.std.createBufferSource();
-        source_audio.buffer = buffer;
-        source_audio.loop = true;
-        
-        // Gain
-        const source_gain = this.std.createGain();
-        source_gain.gain.value = 1;
-        source_audio.connect(source_gain);
-
-        const {notch, lowPeak, highPeak} = await this.ChaineTMNMT_Audio(source_gain, f_ac);
-        //highPeak.connect(this.comp); //Connexion au compresseur
-
-        this.sonActuel = {type:'fichier', source_audio: source_audio, source_gain: source_gain, notch: notch, lowPeak: lowPeak, highPeak: highPeak};
-
-        source_audio.start(0);
-
-        if (!source_audio.loop){source_audio.onended = () => {this.arretSon();};}
-
-        return buffer;
-    }
-
+    /**
+    *@method ChaineTMNMT
+    *Méthode qui permet la modification d'un signal (sinusoidal, carré, triangulaire ou en dents de scie) en fonction du protocole de la thérapie
+    *musicale personnalisée avec suppression de bande fréquentielle. 
+    *@param {AudioNode} src, le signal sinusoidal source à moduler.
+    *@param {Number} f_ac, la fréquence des acouphènes de l'utilisateur. 
+    *@returns {{notch: BiquadFilterNode}, {lowPeak: BiquadFilterNode}, {highPeak: BiquadFilterNode}, les noeuds contenant les filtres de traîtement (pour permettre le nettoyage de la chaine par la suite) 
+    */
     ChaineTMNMT(src, f_ac){
         //Retrait d'1/2 octave autour de la fréquence de l'acouphène
         const notch = this.std.createBiquadFilter();
         notch.type = "notch";
         notch.frequency.value = f_ac;
-        notch.Q.value = 1.4; //Largeur d'un demi-octave
+        notch.Q.value = 1.4; //Facteur de qualité de la largeur d'un demi-octave
+        
         //Augmentation de 20dB des fréquences de 3/8 d'octaves de chaque côté de f_ac
         const lowPeak = this.std.createBiquadFilter();
-        lowPeak.type = "peaking";
-        lowPeak.frequency.value = f_ac*Math.pow(2, (-3/8));
+        lowPeak.type = "peaking"; //Utilisation d'un filtre en pic pour les fréquences en-dessous de f_ac
+        lowPeak.frequency.value = f_ac*Math.pow(2, (-3/8)); 
         lowPeak.Q.value = 1.0;
-        lowPeak.gain.value = 20;
+        lowPeak.gain.value = 20; //Les valeurs de gains des filtres BiquadFilterNode sont en décibels
         const highPeak = this.std.createBiquadFilter();
-        highPeak.type = "peaking";
+        highPeak.type = "peaking"; //Utilisation d'un filtre en pic pour les fréquences au-dessus de f_ac
         highPeak.frequency.value = f_ac*Math.pow(2, (+3/8));
         highPeak.Q.value = 1.0;
         highPeak.gain.value = 20;
-        //Application des opérations
+        
+        //Application des opérations et connexion de la chaîne de traitement audio
         src.connect(notch);
         notch.connect(lowPeak);
         lowPeak.connect(highPeak);
-        highPeak.connect(this.comp); //Connexion au compresseur
-        return {notch, lowPeak, highPeak};
+        highPeak.connect(this.comp); 
+        
+        return {notch, lowPeak, highPeak}; //Retour des filtres (pour deconnexion/nettoyage par la suite)
     }
-
+    
+    // Utilisation d'un fichier audio déposé par l'utilisateur
+    /**
+    *@method ChaineTMNMT_Audio 
+    *Méthode qui permet la modification du signal d'un fichier audio déposé par l'utilisateur en fonction du protocole de la thérapie
+    *musicale personnalisée avec suppression de bande fréquentielle. Cette fonction permet uniquement de modifier le fichier mais n'inclus pas sa récupération et son décodage.
+    *@param {AudioNode} src, le fichier audio source importé.
+    *@param {Number} f_ac, la fréquence des acouphènes de l'utilisateur.
+    *@returns {{notch: BiquadFilterNode}, {lowPeak: BiquadFilterNode}, {highPeak: BiquadFilterNode}, les noeuds contenant les filtres de traîtement (pour permettre le nettoyage de la chaine par la suite) 
+    */
     async ChaineTMNMT_Audio(src, f_ac){
-        // Égalisation du spectre
+        // Dans le cas d'un fichier audio importé, l'égalisation du spectre (méthode dédiée à cet effet) est nécessaire. 
         const audio_egalise = await this.egalisationSpectre(src, f_ac);
 
         //Retrait d'1/2 octave autour de la fréquence de l'acouphène
@@ -371,15 +351,16 @@ export class ModulateurAudio {
         highPeak.Q.value = 1.0;
         highPeak.gain.value = 20;
 
-        //Application des opérations
+        //Application des opérations et connexion de la chaîne de traitement audio
         audio_egalise.connect(notch);
         notch.connect(lowPeak);
         lowPeak.connect(highPeak);
-        highPeak.connect(this.comp); //Connexion au compresseur
+        highPeak.connect(this.comp);
+        
         return {notch, lowPeak, highPeak};
     }
 
-
+    
     async egalisationSpectre(src_, f_ac) {
         const sortie = this.std.createGain();
         
@@ -448,7 +429,45 @@ export class ModulateurAudio {
 
         return sortie;
     }
+    
+    async ModulerAudio(fichier_source, f_ac){
+        this.arretSon(); //Arrêt des sons en cours
+        if (!this.std){await this.init();} //Vérification que l'audioContext est prêt
+
+        // Récupération du fichier audio source déposé (forme brut)
+        const arrayBuffer = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(fichier_source);
+        });
+
+        // Décodage du array buffer qui contient le fichier audio 
+        const buffer = await this.std.decodeAudioData(arrayBuffer).catch(error => {console.error("Erreur", error); throw error});
+        
+        // Lecture du son (lecture des données du buffer)
+        const source_audio = this.std.createBufferSource();
+        source_audio.buffer = buffer;
+        source_audio.loop = true;
+        
+        // Gain
+        const source_gain = this.std.createGain();
+        source_gain.gain.value = 1;
+        source_audio.connect(source_gain);
+
+        const {notch, lowPeak, highPeak} = await this.ChaineTMNMT_Audio(source_gain, f_ac);
+        //highPeak.connect(this.comp); //Connexion au compresseur
+
+        this.sonActuel = {type:'fichier', source_audio: source_audio, source_gain: source_gain, notch: notch, lowPeak: lowPeak, highPeak: highPeak};
+
+        source_audio.start(0);
+
+        if (!source_audio.loop){source_audio.onended = () => {this.arretSon();};}
+
+        return buffer;
+    }
 }
+
 
 
 
