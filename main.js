@@ -7,7 +7,9 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 //Création du moteur audio pour gérer les fonctions
 const moteuraudio = new ModulateurAudio(); 
 
-//Initialisations
+
+// Initialisations //
+
 let enLecture = false; //Variable d'état globale de la lecture audio 
 let freq_ac = null; //Stockage de la fréquence des acouphènes de l'utilisateur 
 
@@ -26,7 +28,7 @@ let freq_deux = 0;
 let aigu = 0;
 
 
-//Sélecteurs
+// Sélecteurs //
 
 // Sélecteurs pour le pitch-matching
 const curseurfreq = $("#freq");
@@ -68,6 +70,7 @@ const boutonsondeux = $("#son_deux");
 const boutonchoixun = $("#un");
 const boutonchoixdeux = $("#deux");
 const feedback = $("#feedback");
+
 
 /**
 *Fonction d'affichage de la fréquence actuelle du curseur.
@@ -132,37 +135,41 @@ curseurfreq.addEventListener("input", () => {
 
 // Neuromodulation //
 
+/**
+*Fonction de gestion du choix de la thérapie suivie, qui permet de réinitialiser la lecture des sons et gérer l'affichage sur l'interface utilisateur.
+*@param {String} mode, le type de thérapie (TMNMT, MWT ou ADT) sélectionnée.
+*/
 function choisirTherapie(mode){
     stopPitchMatching(); //Arrêt du test de pitch-matching
     try {arreterMWT(); } catch {} //Arrêt de la MWT si en cours
     try {arreterTMNMT(); } catch {} //Arrêt de la TMNMT si en cours
     try {arreterADT(); } catch {} //Arrêt de la ADT si en cours
 
-    // Boutons actifs
+    //Boutons actifs sur l'interface
     boutonstherapie.forEach(bouton => bouton.classList.toggle('active', bouton.dataset.mode === mode));
 
-    //Cacher toutes les thérapies avant de choisir celle qu'on veut 
+    //Cacher tous les panneaux de thérapies avant de choisir celui qu'on veut 
     document.querySelectorAll('.panel').forEach(section => section.classList.remove('is-open'));
 
-    // Affichage des options selon la thérapie choisie
+    //Affichage des options selon la thérapie choisie
     if (mode === "TMNMT"){ //Si TMNMT choisie
         optionsTMNMT.classList.add('is-open'); //Afficher les options de TMNMT (dans style.css ca affiche quand l'option is-open est activée)
-        modeTMNMT('base'); //On met le mode base par défault
+        modeTMNMT('base'); //On met le mode base par défault (les deux options sont les sons de base ou un fichier importé)
     } else if (mode === "MWT"){//Si MWT choisie
         optionsMWT.classList.add('is-open');
-    } else if (mode === "ADT"){
+    } else if (mode === "ADT"){ //Si ADT choisie
         panelADT.classList.add('is-open');
         optionsADT.style.display = "none";
     }
 
-    // Reset des timers et boutons
+    //Réinitialisation des timers et boutons
     if (timerTMNMT) timerTMNMT.textContent = "00:00";
     if (timerMWT) timerMWT.textContent = "00:00";
     if (boutonMWT) boutonMWT.textContent = (langactuelle === "fr") ? "Démarrer la séance" : "Start listening session";
     if (boutonTMNMT) boutonTMNMT.textContent = (langactuelle === "fr") ? "Démarrer la séance" : "Start listening session";
     }
 
-// Sélection de la thérapie en fonction des boutons
+//Sélection de la thérapie en fonction des boutons (gestionnaire d'évènement)
 boutonstherapie.forEach(bouton => {
     bouton.addEventListener('click', () => choisirTherapie(bouton.dataset.mode));
 });
@@ -875,5 +882,6 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
