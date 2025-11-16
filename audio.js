@@ -360,17 +360,23 @@ export class ModulateurAudio {
         return {notch, lowPeak, highPeak};
     }
 
-    
+    /**
+    *@method egalisationSpectre
+    *Méthode qui permet l'égalisation du spectre d'un fichier audio.
+    *@param {AudioNode} src_, le fichier audio source dont il faut égaliser le spectre.
+    *@param {Number} f_ac, la fréquence des acouphènes de l'utilisateur.
+    *@returns {{node: GainNode}, {stop: function}}, le noeud de gain correspondant au fichier audio après égalisation, et une fonction qui permet l'arrêt de la boucle et le nottoyage.
+    */
     async egalisationSpectre(src_, f_ac) {
         const sortie = this.std.createGain();
         
-        //Filtre passe-bande de fréquences basses
+        //Filtre passe-bande pour les fréquences basses
         const passebas = this.std.createBiquadFilter(); 
         passebas.type = "bandpass";
         passebas.frequency.value = f_ac*0.75;
         passebas.Q.value = 1.0;
 
-        //Filtre passe-bande de fréquences hautes
+        //Filtre passe-bande pour les fréquences hautes
         const passehaut = this.std.createBiquadFilter();
         passehaut.type = "bandpass";
         passehaut.frequency.value = f_ac*1.5;
@@ -382,39 +388,38 @@ export class ModulateurAudio {
         const gainhaut = this.std.createGain();
         gainhaut.gain.value = 1.0;
 
-        //Analysateurs des bandes de fréquences
+        //Analyseurs des bandes de fréquences pour déterminer comment ajuster le gain
         const analyserbas = this.std.createAnalyser(); 
         const analyserhaut = this.std.createAnalyser(); 
         analyserbas.fftSize = analyserhaut.fftSize = 512;
 
-        //Connexion de la source (fichier audio) > filtres > gains > analyse > sortie
+        //Connexion de la source (fichier audio) > filtres > gains > analyseur > sortie
         src_.connect(passebas);
         passebas.connect(gainbas);
         gainbas.connect(analyserbas);
         analyserbas.connect(sortie);
-
         src_.connect(passehaut);
         passehaut.connect(gainhaut);
         gainhaut.connect(analyserhaut);
         analyserhaut.connect(sortie);
 
-        //Mesure de l'énergie - RMS audio 
-        const bufbas = new Float32Array(analyserbas.fftSize);
+        //Mesure de l'énergie - RMS audio (volume d'une bande de fréquences) pour trouver la bande avec la plus haute puissance
+        const bufbas = new Float32Array(analyserbas.fftSize); //Tableaux de valeurs vides
         const bufhaut = new Float32Array(analyserhaut.fftSize);
         
-        const rms = (buf) =>{ //calcul de la RMS (volume d'une bande de fréquences)
+        const rms = (buf) =>{ 
             let s = 0;
             for (let i=0; i<buf.length; i++){
                 s += buf[i] * buf[i]; //Pour chaque échantillon audio : calcul de son carré pour obtenir une valeur positive
             }
             return Math.sqrt(s/buf.length); //Calcul de la racine carré 
         };
-        
-        //Analyse et correction des gains avec un boucle continue
+        //Analyse et correction des gains avec une boucle continue
+        let id;
         const boucle = () => {
             analyserbas.getFloatTimeDomainData(bufbas);
             analyserhaut.getFloatTimeDomainData(bufhaut);
-
+            
             const rmsbas = rms(bufbas);
             const rmshaut = rms(bufhaut);
             const diff = rmsbas - rmshaut;
@@ -423,13 +428,34 @@ export class ModulateurAudio {
             gainbas.gain.value = 1 - 0.5*diff;
             gainhaut.gain.value = 1 + 0.5*diff;
 
-            requestAnimationFrame(boucle); //Relance de la boucle en continu (60 fois par secondes)
+            id = requestAnimationFrame(boucle); //Relance de la boucle en continu (60 fois par secondes)
         };
         boucle();
 
-        return sortie;
+        return {
+            node: sortie,
+            stop: () => {
+                cancelAnimationFrame(id); //Arrêt de la boucle
+                try { //Nettoyage de la chaîne de traitement
+                    analyserbas.disconnect();
+                    analyserhaut.disconnect();
+                    passebas.disconnect();
+                    passehaut.disconnect();
+                    gainbas.disconnect();
+                    gainhaut.disconnect();
+                } catch (e) {}
+            }
+        }; 
     }
-    
+}
+
+    /**
+    *@method ModulerAudio 
+    *Méthode qui permet de récupérer un fichier audio importé, de la décoder, puis d'y appliquer le protocole TMNMT.
+    *@param {AudioNode} fichier_source, le fichier audio importé par l'utilisateur.
+    *@param {Number} f_ac, la fréquence des acouphènes de l'utilisateur.
+    *@returns 
+    */
     async ModulerAudio(fichier_source, f_ac){
         this.arretSon(); //Arrêt des sons en cours
         if (!this.std){await this.init();} //Vérification que l'audioContext est prêt
@@ -456,7 +482,6 @@ export class ModulateurAudio {
         source_audio.connect(source_gain);
 
         const {notch, lowPeak, highPeak} = await this.ChaineTMNMT_Audio(source_gain, f_ac);
-        //highPeak.connect(this.comp); //Connexion au compresseur
 
         this.sonActuel = {type:'fichier', source_audio: source_audio, source_gain: source_gain, notch: notch, lowPeak: lowPeak, highPeak: highPeak};
 
@@ -467,6 +492,7 @@ export class ModulateurAudio {
         return buffer;
     }
 }
+
 
 
 
