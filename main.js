@@ -1,19 +1,38 @@
 import {ModulateurAudio} from "./audio.js";
 
+//Fonctions de sélection des éléments des documents (pour faciliter le code)
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-const moteuraudio = new ModulateurAudio(); //Création du moteur audio pour gérer les fonctions
+//Création du moteur audio pour gérer les fonctions
+const moteuraudio = new ModulateurAudio(); 
+
+//Initialisations
+let enLecture = false; //Variable d'état globale de la lecture audio 
+let freq_ac = null; //Stockage de la fréquence des acouphènes de l'utilisateur 
+
+//TMNMT
+let tmnmtMode = 'base';
+let tmnmt_temps_debut = null;
+let tmnmtDureeChoisie = 0;
+
+//MWT
+let mwt_temps_debut = null;
+
+//ADT
+let adtEnCours = false;
+let freq_un = 0;
+let freq_deux = 0;
+let aigu = 0;
+
+
+//Sélecteurs
 
 // Sélecteurs pour le pitch-matching
 const curseurfreq = $("#freq");
 const freqout = $("#freqout");
 const typesel = $("#typeton");
 const boutontest = $("#choixton");
-
-let enLecture = false;
-
-let freq_ac = null;
 
 // Sélecteur pour le choix de thérapie
 const boutonstherapie = $$("#choix-therapie .mode-btn");
@@ -29,20 +48,15 @@ const boutonPerso = $("#personnalise");
 const optionsBase = $("#options-base");
 const optionsPerso = $("#options-personnalise");
 const fichier = $("#fichier-perso");
-let tmnmtMode = 'base';
-let tmnmt_temps_debut = null;
 const tmnmtRapport = $("#tmnmt-rapport");
-//Cas où le fichier n'est pas valide
-const fichierInvalide = document.createElement('span');
-optionsPerso.appendChild(fichierInvalide); //Ajout de l'élément
-let tmnmtDureeChoisie = 0;
+const fichierInvalide = document.createElement('span'); //Cas où le fichier n'est pas valide
+optionsPerso.appendChild(fichierInvalide); //Ajout de l'élément de fichier invalide
 
 // Sélecteurs pour la MWT
 const optionsMWT = $("#options-mwt");
 const boutonMWT = $("#bouton-mwt"); 
 const timerMWT = $("#mwt_timer");
 const boutonPauseMWT = $("#pause-mwt");
-let mwt_temps_debut = null;
 const mwtRapport = $("#mwt-rapport");
 
 // Sélecteurs pour la ADT
@@ -54,35 +68,41 @@ const boutonsondeux = $("#son_deux");
 const boutonchoixun = $("#un");
 const boutonchoixdeux = $("#deux");
 const feedback = $("#feedback");
-let adtEnCours = false;
-let freq_un = 0;
-let freq_deux = 0;
-let aigu = 0;
 
-// Fonction d'affichage de la fréquence actuelle du curseur 
+/**
+*Fonction d'affichage de la fréquence actuelle du curseur.
+*@param {Number} val, la valeur de la fréquence sélectionnée sur le curseur.
+*/
 function freqactuelle(val){
     freqout.textContent = `${val} Hz`;
 }
 
-// Fonction qui assure que le système audio est prêt
+/**
+*Fonction qui assure que le système audio est prêt et actif. 
+*/
 async function assurerAudio(){
     await moteuraudio.init(); // Attente du modulateur audio
-    try {if (moteuraudio.std?.state === 'suspended') await moteuraudio.std.resume(); } catch {}
+    try {if (moteuraudio.std?.state === 'suspended') await moteuraudio.std.resume(); } catch {} //Reprise du contexte audio si il a été suspendu
 }
 
 
 // Test de pitch-matching //
-// Fonction qui s'active lorsque le bouton de test de fréquence est cliqué
+
+/**
+*Fonction qui s'active lorsque le bouton de test de fréquence est cliqué pour jouer le ton correspondant
+*à la forme et la fréquence choisie.
+*/
 boutontest.addEventListener("click", async() => {
     await assurerAudio(); //Attente pour assurer que le système audio est prêt
-    const f = parseFloat(curseurfreq.value); //Lecture de la valeur du curseur et conversion en valeur flottante
+    
+    const f = parseFloat(curseurfreq.value); //Lecture de la valeur du curseur (fréquence en Hz) et conversion en valeur flottante
     const t = typesel.value; //Lecture de la forme d'onde choisie 
 
-    if (!enLecture) {
-        moteuraudio.jouerPitch(f, t, -36); //Lecture du pitch de la forme d'onde et fréquence sélectionnée
+    if (!enLecture) { //Si aucun son n'est en lecture
+        moteuraudio.jouerPitch(f, t, -36); //Lecture du pitch de la forme d'onde et fréquence sélectionnée, avec un gain de -36 dBFS
         enLecture = true;
-        boutontest.textContent = langactuelle === "fr" ? "Arrêter" : "Stop";
-    } else {
+        boutontest.textContent = langactuelle === "fr" ? "Arrêter" : "Stop"; //Mise à jour de l'affichage du bouton
+    } else { //Si un son est déjà en lecture
         moteuraudio.arretSon(); //Arrêt du son actuellement en cours
         enLecture = false;
         boutontest.textContent = langactuelle === "fr" ? "Tester le ton" : "Test tone";
@@ -90,23 +110,28 @@ boutontest.addEventListener("click", async() => {
     }
 });
 
+/**
+*Fonction d'arrêt du pitch-matching si le bouton d'arrêt est cliqué.
+*/
 function stopPitchMatching(){
-    try {moteuraudio.arretSon();} catch {}
+    try {moteuraudio.arretSon();} catch {} //Arrêt du son
     enLecture = false;
     if (boutontest) {
-        boutontest.textContent = (langactuelle === "fr") ? "Tester le ton" : "Test tone";
+        boutontest.textContent = (langactuelle === "fr") ? "Tester le ton" : "Test tone"; //Mise à jour de l'affichage du bouton
     }
 }
 
-//
+//Gestion du mouvement du curseur pour ajuster la fréquence 
 curseurfreq.addEventListener("input", () => {
     const f = parseFloat(curseurfreq.value); //Lecture de la valeur du curseur et conversion en valeur flottante
     freqactuelle(f); //Mise à jour de la valeur de fréquence affichée
-    if (enLecture) moteuraudio.defFreq(f); //Jouer la fréquence choisie 
+    if (enLecture) moteuraudio.defFreq(f); //Lecture de la fréquence choisie en temps réel
     freq_ac = f;
 });
 
+
 // Neuromodulation //
+
 function choisirTherapie(mode){
     stopPitchMatching(); //Arrêt du test de pitch-matching
     try {arreterMWT(); } catch {} //Arrêt de la MWT si en cours
@@ -850,4 +875,5 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
