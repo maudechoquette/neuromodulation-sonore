@@ -331,7 +331,7 @@ export class ModulateurAudio {
     */
     async ChaineTMNMT_Audio(src, f_ac){
         // Dans le cas d'un fichier audio importé, l'égalisation du spectre (méthode dédiée à cet effet) est nécessaire. 
-        const audio_egalise = await this.egalisationSpectre(src, f_ac);
+        const {node:audio_egalise, stop: stopBoucleEgalisation} = await this.egalisationSpectre(src, f_ac);
 
         //Retrait d'1/2 octave autour de la fréquence de l'acouphène
         const notch = this.std.createBiquadFilter();
@@ -357,7 +357,7 @@ export class ModulateurAudio {
         lowPeak.connect(highPeak);
         highPeak.connect(this.comp);
         
-        return {notch, lowPeak, highPeak};
+        return {notch, lowPeak, highPeak, stopBoucleEgalisation};
     }
 
     /**
@@ -452,9 +452,9 @@ export class ModulateurAudio {
     /**
     *@method ModulerAudio 
     *Méthode qui permet de récupérer un fichier audio importé, de la décoder, puis d'y appliquer le protocole TMNMT.
-    *@param {AudioNode} fichier_source, le fichier audio importé par l'utilisateur.
+    *@param {File} fichier_source, le fichier audio importé par l'utilisateur.
     *@param {Number} f_ac, la fréquence des acouphènes de l'utilisateur.
-    *@returns 
+    *@returns {AudioBuffer} Le buffer décodé du fichier audio après modulation. 
     */
     async ModulerAudio(fichier_source, f_ac){
         this.arretSon(); //Arrêt des sons en cours
@@ -481,10 +481,9 @@ export class ModulateurAudio {
         source_gain.gain.value = 1;
         source_audio.connect(source_gain);
 
-        const {notch, lowPeak, highPeak} = await this.ChaineTMNMT_Audio(source_gain, f_ac);
+        const {notch, lowPeak, highPeak, stopBoucleEgalisation} = await this.ChaineTMNMT_Audio(source_gain, f_ac);
 
-        this.sonActuel = {type:'fichier', source_audio: source_audio, source_gain: source_gain, notch: notch, lowPeak: lowPeak, highPeak: highPeak};
-
+        this.sonActuel = {type:'fichier', source_audio: source_audio, source_gain: source_gain, notch: notch, lowPeak: lowPeak, highPeak: highPeak, stopBoucleEgalisation: stopBoucleEgalisation};
         source_audio.start(0);
 
         if (!source_audio.loop){source_audio.onended = () => {this.arretSon();};}
@@ -492,6 +491,7 @@ export class ModulateurAudio {
         return buffer;
     }
 }
+
 
 
 
