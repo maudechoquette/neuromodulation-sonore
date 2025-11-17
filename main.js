@@ -26,6 +26,12 @@ let tmnmt_temps_ecoule = 0;
 
 //MWT
 let mwt_temps_debut = null;
+let mwtEnCours = false;
+let mwtStop = null;
+let mwtTimer = null;
+let mwtEnPause = false;
+let mwtTempsRestant = 0;
+let mwt_temps_ecoule = 0;
 
 //ADT
 let adtEnCours = false;
@@ -440,34 +446,31 @@ function genererBoutonRapportTMNMT(temps_ecoute, dureeChoisieMinutes){
 
 
 // MWT //
-let mwtEnCours = false;
-let mwtStop = null;
-let mwtTimer = null;
-let mwtEnPause = false;
-let mwtTempsRestant = 0;
-let mwt_temps_ecoule = 0;
-
+/**
+*Fonction de démarrage du MWT, qui génère le signal, applique la chaîne de filtrage et gère le timer.
+*/
 async function demarrerMWT() {
-    await assurerAudio();
+    await assurerAudio(); //Attente du contexte audio
     stopPitchMatching(); //Arrêt du son de pitch-matching s'il y en a un en cours
-    try {arreterTMNMT();} catch {} //Arrêt de la MWT si elle est en cours
+    try {arreterTMNMT();} catch {} //Arrêt de la TMNMT si elle est en cours
+    try {arreterADT();} catch {} //Arrêt de la ADT si elle est en cours 
 
-    mwtRapport.innerHTML = '';
+    mwtRapport.innerHTML = ''; //Conteneur vide du rapport à télécharger
 
-    const fc = parseFloat(curseurfreq.value);
-    const fm = 10;
-    const ca = 1;
-    const m = 1;
-    const p = 0;
+    const fc = parseFloat(curseurfreq.value); //Fréquence des acouphènes (fréquence porteuse)
+    const fm = 10; //Fréquence de modulation (10Hz)
+    const ca = 1; //Amplitude de la fréquence porteuse 
+    const m = 1; //Profondeur de modulation
+    const p = 0; //Phase 
 
-    const {node, stopAll} = moteuraudio.ChaineMWT(fc, ca, fm, m, p);
+    const {node, stopAll} = moteuraudio.ChaineMWT(fc, ca, fm, m, p); //Application du protocole MWT
 
-    moteuraudio.setgaindB(-18);
+    moteuraudio.setgaindB(-18); //Ajustement du gain (-18dBFS)
 
-    node.connect(moteuraudio.comp);
+    node.connect(moteuraudio.comp); //Connexion du noeud de sortie au compresseur
 
     //Timer
-    
+    //La logique utilisée est la même que pour le TMNMT
     const temps = $("#duree-mwt").value
     mwtTimer = timer_MWT(temps);
     mwt_temps_debut = Date.now();
@@ -481,30 +484,37 @@ async function demarrerMWT() {
     mwtEnCours = true;
     if (boutonMWT) boutonMWT.textContent = (langactuelle === "fr") ? "Arrêter la séance" : "Stop session";
 }
-
+/**
+*Fonction qui gère l'arrêt d'une séance MWT, calcule le temps d'écoute final, réinitialise le timer, la sortie audio et l'interface.
+*/
 function arreterMWT() {
-    if (!mwtEnCours) return;
+    if (!mwtEnCours) return; //Sortie si aucune séance de MWT n'est en cours
 
     if (mwt_temps_debut !== null && !mwtEnPause){
-        mwt_temps_ecoule += Date.now() - mwt_temps_debut;
+        mwt_temps_ecoule += Date.now() - mwt_temps_debut; //Calcul du temps durant lequel la thérapie joue pour le rapport
     }
-    const mwt_temps_final = mwt_temps_ecoule;
+    const mwt_temps_final = mwt_temps_ecoule; //Stockage du temps d'écoute complet pour le rapport
 
+    //Réinitialisation des variables
     mwtEnCours = false;
     mwtEnPause = false;
-    mwtTempsRestant = 0; //Réinitialisation
+    mwtTempsRestant = 0; 
     mwt_temps_debut = null;
     mwt_temps_ecoule = 0;
 
+    //Arrêt du timer
     clearInterval(mwtTimer);
     mwtTimer = null;
-    if (timerMWT) timerMWT.textContent = "00:00";
+    if (timerMWT) timerMWT.textContent = "00:00"; //Réinitialisation de l'affichage
+
+    //Nettoyage de la chaîne audio
     try {mwtStop?.(); } catch {}
 
+    //Génération du bouton pour télécharger le rapport
     genererBoutonRapportMWT(mwt_temps_final);
-    
-    if (boutonMWT) boutonMWT.textContent = (langactuelle === "fr") ? "Démarrer la séance d'écoute" : "Start listening session";
 
+    //Mise à jour du bouton
+    if (boutonMWT) boutonMWT.textContent = (langactuelle === "fr") ? "Démarrer la séance d'écoute" : "Start listening session";
 }
 
 function timer_MWT(temps, mwtInitialRestant = null){
@@ -913,6 +923,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
