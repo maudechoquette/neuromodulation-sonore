@@ -516,14 +516,21 @@ function arreterMWT() {
     //Mise à jour du bouton
     if (boutonMWT) boutonMWT.textContent = (langactuelle === "fr") ? "Démarrer la séance d'écoute" : "Start listening session";
 }
-
+/**
+*Fonction qui gère le chronomètre pour la thérapie MWT ainsi que son affichage.
+*Elle démarre le décompte du temps restant depuis le début ou après une pause.
+*@param {Number} temps, la durée de la séance sélectionnée en minutes.
+*@param {Number} mwtInitialRestant, le temps restant en millisecondes si la séance est reprise après une pause.
+*@returns {Number} intervalle, l'ID généré par la fonction setInterval() pour arrêter le chronomètre manuellement. 
+*/
 function timer_MWT(temps, mwtInitialRestant = null){
+    //La logique et les fonctions utilisées sont les mêmes que pour la fonction timer_TMNMT
     const temps_total_ms = temps*60*1000;
     let temps_fin;
     if (mwtInitialRestant !== null) {
         temps_fin = mwtInitialRestant; //Si le temps restant n'est pas vide (il y a eu une pause puis une reprise), le temps jusqu'à la fin est le temps restant
     } else {
-        temps_fin = temps_total_ms; //Si le temps restant est vide, le temps jusqu'à la fin est le temps total
+        temps_fin = temps_total_ms; //Si le temps restant est vide (pas de pause), le temps jusqu'à la fin est le temps total
     }
     const fin = Date.now() + temps_fin; 
 
@@ -541,7 +548,7 @@ function timer_MWT(temps, mwtInitialRestant = null){
         if (mwtTempsRestant <= 0){
             mwtTempsRestant= 0;
             clearInterval(intervalle);
-            arreterMWT(); //Arrêt de TMNMT à la fin du timer
+            arreterMWT(); //Arrêt de MWT à la fin du timer
         }
 
         const minutes = Math.floor(mwtTempsRestant/(60*1000)).toString().padStart(2, "0");
@@ -552,18 +559,19 @@ function timer_MWT(temps, mwtInitialRestant = null){
         if (timerMWT){
             timerMWT.textContent = `${minutes}:${secondes}`;
         } 
-        
-        
     },1000);
-
     return intervalle;
 }
-
+/**
+*Fonction qui gère les pauses de séance dans la thérapie MWT. 
+*Elle arrête ou redémarre le chronomètre et le contexte audio avec les fonctions suspend/resume et ajuste l'affichage du bouton. 
+*/
 function PauseMWT(){
+    //La logique et les fonctions utilisées sont les même que pour la fonction PauseTMNMT()
     if (!mwtEnCours) return;
     const duree = parseFloat($("#duree-mwt").value);
     if (mwtEnPause){ // Reprise après une mise en pause
-        moteuraudio.std.resume(); // Utilisation de la fonction resume() de Web Audio API
+        moteuraudio.std.resume(); // Utilisation de la fonction resume() de Web Audio API pour redémarrer le moteur audio
         mwtTimer = timer_MWT(duree, mwtTempsRestant);
         mwtEnPause = false;
         mwt_temps_debut = Date.now();
@@ -580,9 +588,14 @@ function PauseMWT(){
         boutonMWT.textContent = (langactuelle === "fr") ? "Reprendre la séance" : "Resume session";
     }
 }
-
+/**
+*Fonction qui affiche un bouton permettant de télécharger le rapport après une séance de thérapie MWT. Cette fonction permet d'afficher le bouton et de stocker les éléments
+*à ajouter dans le rapport mais ne génère pas le rapport.
+*@param {Number} temps_ecoute, le temps d'écoute réel de la séance (en considérant les pauses et les arrêts avant la fin), en millisecondes. 
+*@param {Number} dureeChoisieMinutes, la durée initiale choisie par l'usager pour la séance. 
+*/
 function genererBoutonRapportMWT(temps_ecoute){
-    //Affichage du boutons
+    //Affichage du bouton
     mwtRapport.innerHTML = '';
     const boutonRapport = document.createElement('button');
     boutonRapport.textContent = (langactuelle === "fr") ? "Télécharger le rapport de séance" : "Download session report";
@@ -601,7 +614,7 @@ function genererBoutonRapportMWT(temps_ecoute){
         genererRapportPDF('MWT', dureeChoisie, dureeEcoute, fAc, 'N/A', 'N/A', 'N/A');
     });
 
-    mwtRapport.appendChild(boutonRapport);
+    mwtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans son conteneur
 }
 
 
@@ -923,6 +936,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
