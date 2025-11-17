@@ -376,54 +376,66 @@ function timer_TMNMT(temps, tmnmtInitialRestant = null){
     return intervalle; //Retour de l'ID de l'intervalle pour pouvoir arrêter le timer manuellement
 }
 
+/**
+*Fonction qui gère les pauses de séance dans la thérapie TMNMT. 
+*Elle arrête ou redémarre le chronomètre et le contexte audio avec les fonctions suspend/resume et ajuste l'affichage du bouton. 
+*/
 function PauseTMNMT(){
-    if (!tmnmtEnCours) return;
+    if (!tmnmtEnCours) return; 
+    
     if (tmnmtEnPause){ // Reprise après une mise en pause
-        moteuraudio.std.resume(); // Utilisation de la fonction resume() de Web Audio API
-        const duree = parseFloat($("#duree-tmnmt").value);
-        tmnmtTimer = timer_TMNMT(duree, tmnmtTempsRestant);
-        tmnmtEnPause = false;
-        tmnmt_temps_debut = Date.now();
-        boutonTMNMT.textContent = (langactuelle === "fr") ? "Arrêter la séance" : "Stop session";
+        moteuraudio.std.resume(); // Utilisation de la fonction resume() de Web Audio API pour redémarrer le moteur audio
+        const duree = parseFloat($("#duree-tmnmt").value); //Durée totale de la séance (re-lue)
+        tmnmtTimer = timer_TMNMT(duree, tmnmtTempsRestant); //Redémarrage du timer en fonction de la durée totale et du temps restant
+        tmnmtEnPause = false; //Mise à jour de la variable d'état globale
+        tmnmt_temps_debut = Date.now(); //Mise à jour du temps de reprise 
+        boutonTMNMT.textContent = (langactuelle === "fr") ? "Arrêter la séance" : "Stop session"; //Mise à jour de l'affichage du bouton
+        
     } else { // Mise en pause
-        moteuraudio.std.suspend(); // Utilisation de la fonction suspend() de Web Audio API
-        clearInterval(tmnmtTimer);
-        tmnmtTimer = null;
-        tmnmtEnPause = true;
+        moteuraudio.std.suspend(); // Utilisation de la fonction suspend() de Web Audio API pour arrêter le moteur audio (sans le déconnecter)
+        clearInterval(tmnmtTimer); //Arrêt de la boucle du timer
+        tmnmtTimer = null; 
+        tmnmtEnPause = true; //Mise à jour de la variable d'état globale
         if (tmnmt_temps_debut !== null){
-            tmnmt_temps_ecoule += Date.now() - tmnmt_temps_debut;
+            tmnmt_temps_ecoule += Date.now() - tmnmt_temps_debut; //Mise à jour du temps écoulé pour le rapport.
             tmnmt_temps_debut = null;
         }
-        boutonTMNMT.textContent = (langactuelle === "fr") ? "Reprendre la séance" : "Resume session";
+        boutonTMNMT.textContent = (langactuelle === "fr") ? "Reprendre la séance" : "Resume session"; //Mise à jour de l'affichage du bouton
     }
 }
-
+/**
+*Fonction qui affiche un bouton permettant de télécharger le rapport après une séance de thérapie TMNMT. Cette fonction permet d'afficher le bouton et de stocker les éléments
+*à ajouter dans le rapport mais ne génère pas le rapport.
+*@param {Number} temps_ecoute, le temps d'écoute réel de la séance (en considérant les pauses et les arrêts avant la fin), en millisecondes. 
+*@param {Number} dureeChoisieMinutes, la durée initiale choisie par l'usager pour la séance. 
+*/
 function genererBoutonRapportTMNMT(temps_ecoute, dureeChoisieMinutes){
-    //Affichage du boutons
-    tmnmtRapport.innerHTML = '';
-    const boutonRapport = document.createElement('button');
-    boutonRapport.textContent = (langactuelle === "fr") ? "Télécharger le rapport de séance" : "Download session report";
+    //Affichage du bouton
+    tmnmtRapport.innerHTML = ''; //Affichage et nettoyage du conteneur pour le bouton
+    const boutonRapport = document.createElement('button'); //Création du bouton
+    boutonRapport.textContent = (langactuelle === "fr") ? "Télécharger le rapport de séance" : "Download session report"; //Écriture sur le bouton
 
     //Informations pour le rapport
-    const minutesChoisie = Math.floor(dureeChoisieMinutes).toString().padStart(2, "0");
-    const secondesChoisie = Math.round((dureeChoisieMinutes*60)%60).toString().padStart(2, "0");
-    const dureeChoisie = `${minutesChoisie} min ${secondesChoisie} sec`;
+    const minutesChoisie = Math.floor(dureeChoisieMinutes).toString().padStart(2, "0"); //Minutes de la durée choisie 
+    const secondesChoisie = Math.round((dureeChoisieMinutes*60)%60).toString().padStart(2, "0"); //Secondes de la durée choisie (utile lorsque le fichier audio est importé)
+    const dureeChoisie = `${minutesChoisie} min ${secondesChoisie} sec`; //Mise en forme pour le rapport
     
-    const minutes = Math.floor(temps_ecoute/60000).toString().padStart(2, "0");
-    const secondes = Math.floor((temps_ecoute/1000)%60).toString().padStart(2, "0");
-    const dureeEcoute = `${minutes} min ${secondes} sec`;
-    const f_ac = freq_ac || parseFloat(curseurfreq.value);
-    const fAc = `${f_ac} Hz`;
-    const mode = (tmnmtMode === 'base') ? 'Sons de base' : 'Fichier audio importé';
-    const typeSon = (tmnmtMode === 'base') ? ($("#type")?.selectedOptions[0]?.textContent || 'N/A') : 'N/A';
-    const nomFichier = (tmnmtMode === 'personnalise') ? (fichier.files[0]?.name || 'N/A') : 'N/A';
+    const minutes = Math.floor(temps_ecoute/60000).toString().padStart(2, "0"); //Minutes réellement écoutées
+    const secondes = Math.floor((temps_ecoute/1000)%60).toString().padStart(2, "0"); //Secondes réellement écoutées
+    const dureeEcoute = `${minutes} min ${secondes} sec`; //Mise en forme pour le rapport
+    
+    const f_ac = freq_ac || parseFloat(curseurfreq.value); //Fréquence des acouphènes (curseur)
+    const fAc = `${f_ac} Hz`; //Mise en forme pour le rapport
+    const mode = (tmnmtMode === 'base') ? 'Sons de base' : 'Fichier audio importé'; //Mode de TMNMT (sons de base ou fichier audio importé)
+    const typeSon = (tmnmtMode === 'base') ? ($("#type")?.selectedOptions[0]?.textContent || 'N/A') : 'N/A'; //Type de son (bruit blanc, rose, onde sinusoidale, etc...)
+    const nomFichier = (tmnmtMode === 'personnalise') ? (fichier.files[0]?.name || 'N/A') : 'N/A'; //Nom du fichier importé
 
     //Génération du rapport lorsque le bouton est cliqué
     boutonRapport.addEventListener('click', () => {
-        genererRapportPDF('TMNMT', dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier);
+        genererRapportPDF('TMNMT', dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier); //Appel d'une fonction dédiée à cet effet 
     });
 
-    tmnmtRapport.appendChild(boutonRapport);
+    tmnmtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans le conteneur 
 }
 
 
@@ -901,6 +913,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
