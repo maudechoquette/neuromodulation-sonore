@@ -17,6 +17,12 @@ let freq_ac = null; //Stockage de la fréquence des acouphènes de l'utilisateur
 let tmnmtMode = 'base';
 let tmnmt_temps_debut = null;
 let tmnmtDureeChoisie = 0;
+let tmnmtEnCours = false; 
+let tmnmtStop = null;
+let tmnmtTimer = null;
+let tmnmtEnPause = false;
+let tmnmtTempsRestant = 0;
+let tmnmt_temps_ecoule = 0;
 
 //MWT
 let mwt_temps_debut = null;
@@ -176,102 +182,102 @@ boutonstherapie.forEach(bouton => {
 
 
 // TMNMT //
-let tmnmtEnCours = false; 
-let tmnmtStop = null;
-let tmnmtTimer = null;
-let tmnmtEnPause = false;
-let tmnmtTempsRestant = 0;
-let tmnmt_temps_ecoule = 0;
 
-// Choix du mode de TMNMT : sons de base ou fichier audio chargé par l'utilisateur
+/**
+*Fonction qui gère le choix du mode de TMNMT : sons de base ou fichier audio importé par l'utilisateur. Elle met à jour l'interface. 
+*@param {String} modw_tmnmt, le mode choisi (en fonction du bouton cliqué)
+*/
 function modeTMNMT(mode_tmnmt){
-    tmnmtMode = mode_tmnmt;
+    tmnmtMode = mode_tmnmt; //Mise à jour de la variable globale qui stocke le mode de TMNMT
     boutonBase.classList.toggle('active', mode_tmnmt === 'base'); //Si le bouton de base est choisi on utilise les sons de base
     boutonPerso.classList.toggle('active', mode_tmnmt === 'personnalise'); //Si le bouton de fichier personnalisé est choisi on utilise le fichier fourni
-    if (mode_tmnmt === "base"){
-        optionsBase.style.display = "";
-        optionsPerso.style.display = 'none';
-        fichierInvalide.textContent = '';
-        dureeTMNMT.disabled = false; //On a besoin de la durée de séance si le TMNMT est utilisé en mode "base".
-    } else if (mode_tmnmt === "personnalise"){
-        optionsBase.style.display = "none";
-        optionsPerso.style.display = '';
-        dureeTMNMT.disabled = true; //Si le TMNMT est utilisé en mode personnalisé, on n'a pas besoin de la durée de séance. 
+    if (mode_tmnmt === "base"){ //Si le mode de base est sélectionné
+        optionsBase.style.display = ""; //Affichage du panneau avec les options du mode de base
+        optionsPerso.style.display = 'none'; //Cache du panneau avec les options du mode personnalisé
+        fichierInvalide.textContent = ''; //Cache des messages d'erreur
+        dureeTMNMT.disabled = false; //On a besoin de la durée de séance si le TMNMT est utilisé en mode "base" (car le signal est continu).
+    } else if (mode_tmnmt === "personnalise"){ //Si le mode personnalisé est sélectionné
+        optionsBase.style.display = "none"; //Cache du panneau avec les options du mode de base
+        optionsPerso.style.display = ''; //Affichage du panneau avec les options du mode personnalisé
+        dureeTMNMT.disabled = true; //Si le TMNMT est utilisé en mode personnalisé, on n'a pas besoin de la durée de séance (on utilise la durée du fichier audio).
     } 
 }
+//Gestionnaire d'évènement pour le choix du mode de TMNMT (en fonction du bouton cliqué)
 boutonBase.addEventListener('click', () => modeTMNMT('base'));
 boutonPerso.addEventListener('click', () => modeTMNMT('personnalise'));
 
-//Démarrage du TMNMT de base 
+/**
+*Fonction de démarrage du TMNMT avec le mode de base, qui applique la chaine de filtrage sur le signal et gère le timer.
+*/
 async function demarrerTMNMT(){
-    await assurerAudio();
+    await assurerAudio(); //Attente du contexte audio
     stopPitchMatching(); //Arrêt du son de pitch-matching s'il y en a un en cours
-    try {arreterMWT();} catch {} //Arrêt de la MWT si elle est en cours
+    try {arreterMWT();} catch {} //Arrêt de la MWT si elle est en cours 
+    try {arreterADT();} catch {} //Arrêt de la ADT si elle est en cours
 
-    tmnmtRapport.innerHTML = ''; //Container pour télécharger le rapport
+    tmnmtRapport.innerHTML = ''; //Conteneur vide du rapport à télécharger
 
-    const f_ac = freq_ac || parseFloat(curseurfreq.value); //Définition de la fréquence de l'acouphène
-    const typeTherapie = document.querySelector("#type")?.value || "white";
-    const {node: srcNode, stopAll} = moteuraudio.creerSourceTherapie(typeTherapie);
-    const chaine_tmnmt = moteuraudio.ChaineTMNMT(srcNode, f_ac);
+    const f_ac = freq_ac || parseFloat(curseurfreq.value); //Fréquence des acouphènes
+    const typeTherapie = $("#type")?.value || "white"; //Type de son choisi (bruit blanc par défaut)
+    const {node: srcNode, stopAll} = moteuraudio.creerSourceTherapie(typeTherapie); //Création de la source audio
+    const chaine_tmnmt = moteuraudio.ChaineTMNMT(srcNode, f_ac); //Application du protocole TMNMT
 
-    moteuraudio.setgaindB(-18); //Ajustement du gain
+    moteuraudio.setgaindB(-18); //Ajustement du gain (-18 dBFS)
 
     //Timer
-    
-    const temps = parseFloat($("#duree-tmnmt").value);
-    tmnmtTimer = timer_TMNMT(temps);
+    const temps = parseFloat($("#duree-tmnmt").value); //Durée de la séance sélectionnée
+    tmnmtTimer = timer_TMNMT(temps); //Démarrage du timer (fonction dédiée à cet effet)
 
     tmnmt_temps_debut = Date.now(); //Enregistrement du temps de départ pour pouvoir générer le rapport
-    tmnmt_temps_ecoule = 0; 
+    tmnmt_temps_ecoule = 0; //Réinitialisation du temps écoulé
 
-    tmnmtStop = () => {
+    tmnmtStop = () => { //Nettoyage de la chaîne lorsqu'on arrête la thérapie
         try {stopAll?.();} catch {}
         try {chaine_tmnmt.notch.disconnect();} catch{}
         try {chaine_tmnmt.lowPeak.disconnect();} catch{}
         try {chaine_tmnmt.highPeak.disconnect();} catch {}
         };
 
-    tmnmtEnCours = true;
-    if (boutonTMNMT) boutonTMNMT.textContent = (langactuelle === "fr") ? "Arrêter la séance" : "Stop session";
+    tmnmtEnCours = true; //Mise à jour de l'état global
+    if (boutonTMNMT) boutonTMNMT.textContent = (langactuelle === "fr") ? "Arrêter la séance" : "Stop session"; //Mise à jour de l'affichage du bouton
 }
 
-//Démarrage du TMNMT à partir d'un fichier audio de l'utilisateur
+/**
+*Fonction de démarrage du TMNMT avec le mode personnalié, qui applique la chaine de filtrage sur le fichier audio importé et gère le timer.
+*/
 async function demarrerTMNMT_fichier(){
+    //Démarrage et nettoyage global
     await assurerAudio();
     stopPitchMatching();
     try {arreterMWT();} catch {}
+    try {arreterADT();} catch {}
 
     tmnmtRapport.innerHTML = '';
-    fichierInvalide.textContent = ''; //Message d'erreur vide au départ
+    fichierInvalide.textContent = ''; //Réinitialisation du message d'erreur
 
     const f_ac = freq_ac || parseFloat(curseurfreq.value);
-    const srcFichier = fichier.files[0];
+    const srcFichier = fichier.files[0]; //Récupération de l'objet File déposé dans l'input 
 
-    //Vérification du fichier 
+    //Vérification du format du fichier 
     if (!srcFichier || !srcFichier.type.startsWith('audio/')){
         fichierInvalide.textContent = (langactuelle === "fr")? "Le format du fichier est invalide" : "Invalid file format"; //Affichage d'un message d'erreur si le fichier n'est pas un audio
         return;
     }
-    //try {await moteuraudio.ModulerAudio(srcFichier, f_ac); } catch {}
 
-    //Longueur du fichier (durée)
-    let duree_fichier_sec = 0; //Initialisation
+    let duree_fichier_sec = 0; //Initialisation de la durée du fichier
     try {
-        const buffer = await moteuraudio.ModulerAudio(srcFichier, f_ac);
+        const buffer = await moteuraudio.ModulerAudio(srcFichier, f_ac); //ModulerAduio charge, décode et applique le protocole au fichier, puis renvoie un AudioBuffer
         if (buffer && buffer.duration){ //Vérification que le buffer et sa durée existent
-            duree_fichier_sec = buffer.duration
+            duree_fichier_sec = buffer.duration; //Détermination de la longueur du fichier (durée)
         } else {
             throw new Error ("Impossible de trouver la durée du fichier audio.");
         }
-        
     } catch (e) {
-        console.error ("Erreur lors du traitement du fichier audio:", e);
+        console.error ("Erreur lors du traitement du fichier audio:", e); //Affichage d'un message d'erreur si le fichier de peut être décodé ou traité
         fichierInvalide.textContent = (langactuelle === "fr") ? "Assurez-vous que le format du fichier audio est supporté (MP3, WAV)," : "Ensure the format file is supporter (MP3, WAV).";
         return;
     }
-
-
+    
     //Timer
     const temps_minutes = duree_fichier_sec/60;
     tmnmtTimer = timer_TMNMT(temps_minutes);
@@ -279,40 +285,45 @@ async function demarrerTMNMT_fichier(){
     tmnmt_temps_debut = Date.now();
     tmnmt_temps_ecoule = 0;
 
-    tmnmtStop = () => {moteuraudio.arretSon();};
+    tmnmtStop = () => {moteuraudio.arretSon();}; //Nettoyage en cas d'arrêt
     tmnmtEnCours = true;
     if (boutonTMNMT) boutonTMNMT.textContent = (langactuelle === "fr") ? "Arrêter la séance" : "Stop session";
     
 }
-
+/**
+*Fonction qui gère l'arrêt d'une séance TMNMT, calcule le temps d'écoute finale, réinitialise le timer, la sortie audio et l'interface.
+*/
 function arreterTMNMT(){
-    if (!tmnmtEnCours) return;
+    if (!tmnmtEnCours) return; //Sortie si aucune séance de TMNMT n'est en cours
 
     if (tmnmt_temps_debut !== null && !tmnmtEnPause){
         tmnmt_temps_ecoule += Date.now() - tmnmt_temps_debut; //Calcul du temps durant lequel la thérapie joue pour le rapport
     }
-    const tmnmt_temps_final = tmnmt_temps_ecoule;
+    const tmnmt_temps_final = tmnmt_temps_ecoule; //Stockage du temps d'écoute complet pour le rapport
 
+    //Réinitialisation des variables
     tmnmtEnCours = false;
     tmnmtEnPause = false; 
-    tmnmtTempsRestant = 0; //Réinitialisation
+    tmnmtTempsRestant = 0;  
     tmnmt_temps_debut = null;
-    tmnmt_temps_ecoule = 0;
+    tmnmt_temps_ecoule = 0; 
 
-    clearInterval(tmnmtTimer);
+    //Arrêt du timer
+    clearInterval(tmnmtTimer); 
     tmnmtTimer = null;
+    if (timerTMNMT) timerTMNMT.textContent = "00:00"; //Réinitialisation de l'affichage
 
-    if (timerTMNMT) timerTMNMT.textContent = "00:00"; //Réinitialisation de l'affichage du timer
+    moteuraudio.transitionGain(-60, 0.4); //Mise du gain à 0 (avec un effet fondu de 0,4 secondes)
 
-    moteuraudio.transitionGain(-60, 0.4);
+    //Nettoyage de la chaîne audio
     setTimeout(() => {
-        if (tmnmtStop) tmnmtStop();
-        moteuraudio.setgaindB(-18);
-        genererBoutonRapportTMNMT(tmnmt_temps_final, tmnmtDureeChoisie);
-        tmnmtDureeChoisie = 0; //Réinitialisation
+        if (tmnmtStop) tmnmtStop(); //Exécution de la fonction de nettoyage audio
+        moteuraudio.setgaindB(-18); //Réinitialisation du gain
+        genererBoutonRapportTMNMT(tmnmt_temps_final, tmnmtDureeChoisie); //Génération du bouton pour télécharger le rapport 
+        tmnmtDureeChoisie = 0; //Réinitialisation de la durée sélectionnée
     }, 420);
 
-    if (boutonTMNMT) boutonTMNMT.textContent = (langactuelle === "fr") ? "Démarrer la séance d'écoute" : "Start listening session";
+    if (boutonTMNMT) boutonTMNMT.textContent = (langactuelle === "fr") ? "Démarrer la séance d'écoute" : "Start listening session"; //Mise à jour du bouton
     
 }
 
@@ -882,6 +893,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
