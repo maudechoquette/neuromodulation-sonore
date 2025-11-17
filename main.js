@@ -327,27 +327,35 @@ function arreterTMNMT(){
     
 }
 
+/**
+*Fonction qui gère le chronomètre pour la thérapie TMNMT ainsi que son affichage.
+*Elle démarre le décompte du temps restant depuis le début ou après une pause.
+*@param {Number} temps, la durée en minutes de la séance.
+*@param {Number} tmnmtInitialRestant, le temps en restant en millisecondes si la séance est reprise après une pause.
+*@returns {Number} intervalle, l'ID généré par la fonction setInterval() pour arrêter le chronomètre manuellement. 
+*/
 function timer_TMNMT(temps, tmnmtInitialRestant = null){
-    tmnmtDureeChoisie = temps;
+    tmnmtDureeChoisie = temps; //Mise à jour de la variable globale (pour le rapport)
     const temps_total_ms = temps*60*1000; //Conversion du temps (minutes) en millisecondes
-    let temps_fin;
+    let temps_fin; //Initialisation du temps jusqu'à la fin de la séance
     if (tmnmtInitialRestant !== null) {
         temps_fin = tmnmtInitialRestant; //Si le temps restant n'est pas vide (il y a eu une pause puis une reprise), le temps jusqu'à la fin est le temps restant
     } else {
-        temps_fin = temps_total_ms; //Si le temps restant est vide, le temps jusqu'à la fin est le temps total
+        temps_fin = temps_total_ms; //Si le temps restant est vide (pas de pause), le temps jusqu'à la fin est le temps total
     }
-    const fin = Date.now() + temps_fin; 
+    const fin = Date.now() + temps_fin; //Calcul de l'instant de fin de la thérapie
     
     //Affichage initial du timer (car il y a un temps de latence)
-    const minutes_initiales = Math.floor(temps_fin/(60*1000)).toString().padStart(2, "0");
-    const secondes_initiales = Math.floor((temps_fin/1000)%60).toString().padStart(2, "0");
+    const minutes_initiales = Math.floor(temps_fin/(60*1000)).toString().padStart(2, "0"); //Nombre de minutes initiales 
+    const secondes_initiales = Math.floor((temps_fin/1000)%60).toString().padStart(2, "0"); //Nombre de secondes initiales 
     if (timerTMNMT){
-        timerTMNMT.textContent = `${minutes_initiales}:${secondes_initiales}`;
+        timerTMNMT.textContent = `${minutes_initiales}:${secondes_initiales}`; //Affichage du chronomètre
     }
 
-    const intervalle = setInterval(()=>{ //Exécution du code à intervalles réguliers (1000 millisecondes = 1 seconde)
-        const debut = Date.now();
-        tmnmtTempsRestant = fin - debut; //Sauvegarde du temps restant pour mettre en pause
+    const intervalle = setInterval(()=>{ //Exécution du code du timer à intervalles réguliers (1000 millisecondes = 1 seconde). 
+        //On note que setInterval() génère un identifiant numérique, qu'on a noté intervalle, et qui permettra par la suite d'arrêter le timer manuellement.
+        const debut = Date.now(); //Instant de début de la thérapie (actuel)
+        tmnmtTempsRestant = fin - debut; //Sauvegarde du temps restant pour la mise en pause
 
         const minutes = Math.floor(tmnmtTempsRestant/(60*1000)).toString().padStart(2, "0");
         const secondes = Math.floor((tmnmtTempsRestant/1000)%60).toString().padStart(2, "0");
@@ -355,17 +363,17 @@ function timer_TMNMT(temps, tmnmtInitialRestant = null){
         tmnmt_temps_ecoule = temps_total_ms - tmnmtTempsRestant; //Mise à jour du temps écoulé pour le rapport
 
         if (timerTMNMT){
-            timerTMNMT.textContent = `${minutes}:${secondes}`;
+            timerTMNMT.textContent = `${minutes}:${secondes}`; //Affichage
         } 
         
-        if (tmnmtTempsRestant <= 0){
-            tmnmtTempsRestant = 0;
-            clearInterval(intervalle);
-            arreterTMNMT(); //Arrêt de TMNMT à la fin du timer
+        if (tmnmtTempsRestant <= 0){ //Lorsque le temps restant est inférieur ou égal à 0 (séance finie)
+            tmnmtTempsRestant = 0; //Réinitialisation du temps restant
+            clearInterval(intervalle); //Arrêt de la boucle
+            arreterTMNMT(); //Arrêt de la thérapie TMNMT
         }
     },1000);
 
-    return intervalle;
+    return intervalle; //Retour de l'ID de l'intervalle pour pouvoir arrêter le timer manuellement
 }
 
 function PauseTMNMT(){
@@ -893,6 +901,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
