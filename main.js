@@ -618,72 +618,103 @@ function genererBoutonRapportMWT(temps_ecoute){
 }
 
 
-// ADT 
-async function demarrerADT(){ //Démarrage d'une nouvelle manche
-    await assurerAudio();
+// ADT //
+/**
+*Fonction de démarrage d'une nouvelle manche du jeu de ADT (entraînement à la discrimination auditive). 
+*Cette fonction gère l'affichage, arrête les thérapies en cours et génère les signaux nécessaires.
+*/
+async function demarrerADT(){ 
+    await assurerAudio(); //Attente du contexte audio
     stopPitchMatching(); //Arrêt du son de pitch-matching s'il y en a un en cours
-    try {arreterTMNMT();} catch {} //Arrêt de la MWT si elle est en cours
-    try {arreterMWT();} catch {}
+    try {arreterTMNMT();} catch {} //Arrêt de la TMNMT si elle est en cours
+    try {arreterMWT();} catch {} //Arrêt de la MWT si elle est en encours
     arreterADT(); //Arrêt de l'ancien jeu (au cas où)
-    frequencesADT(); //Génération des fréquences aléatoires aigues et graves
-    adtEnCours = true;
-    optionsADT.style.display = "block";
-    //Mise à jour des boutons
-    boutonADT.textContent = (langactuelle === "fr") ? "Arrêter le jeu" : "Stop game";
+
+    //Génération des fréquences aléatoires aigues et graves (fonction dédiée à cet effet) en fonction de la fréquence des acouphènes
+    frequencesADT(); 
+    
+    adtEnCours = true; //Mise à jour de la variable d'état globale (jeu en état actif)
+    
+    optionsADT.style.display = "block"; //Affichage des boutons du jeux (optionsADT)
+    boutonADT.textContent = (langactuelle === "fr") ? "Arrêter le jeu" : "Stop game"; //Mise à jour du bouton de démarrage et d'arrêt du jeu
 }
-function jouerADT(button, freq){ //Lecture des sons pour le jeu
+/**
+*Fonction qui gère la lecture et l'arrêt des sons pour le jeu de ADT avec les boutons.
+*@param {HTMLElement} button, le bouton qui est cliqué (boutosonun pour le premier son et boutonsondeux pour le deuxième).
+*@param {Number} freq, la fréquence associée au bouton cliqué (freq_un ou freq_deux)
+*/
+function jouerADT(button, freq){
     if (!adtEnCours) return;
 
-    const arret = button.textContent.includes("Arrêter") || button.textContent.includes("Stop");
+    const arret = button.textContent.includes("Arrêter") || button.textContent.includes("Stop"); //Permet de déterminer si le bouton a été cliqué pour l'arrêt d'un son
 
     if (moteuraudio.sonActuel){ 
         moteuraudio.arretSon();//Arrêt du son déjà en cours s'il y en a un
-        //Réinitialisation des boutons (au besoin)
+        //Réinitialisation des boutons 
         boutonsonun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
         boutonsondeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
     }
 
     if (arret){
-        return;
+        return; //Si un arrêt a été cliqué, on sort de la fonction après le nettoyage de l'audio
     }
-    
+    //Sinon, on joue le ton à la fréquence voulue (onde sinusoidale à -36dBFS)
     moteuraudio.jouerPitch(freq, "sine", -36);
-    button.textContent = (langactuelle === "fr") ? "Arrêter" : "Stop";
+    button.textContent = (langactuelle === "fr") ? "Arrêter" : "Stop"; //Mise à jour du bouton
 }
-function reponsesADT(index){ //Gestion et vérification des réponses
+/**
+*Fonction de gestion et vérification des réponses du jeu de ADT. 
+*Elle permet de vérifier que l'utilisateur a reconnu le son le plus aigu.
+*@param {Number} index, l'indice du son choisi par l'utilisateur (1 ou 2)
+*/
+function reponsesADT(index){ 
     if (!adtEnCours) return;
 
-    moteuraudio.arretSon();
+    moteuraudio.arretSon(); //Arrêt de tous les sons
+    //Réinitialisation des boutons 
     boutonsonun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
     boutonsondeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
 
-    if (index === aigu){ //L'index correspond au bouton cliqué par l'utilisateur pour la fréquence aigue
+    if (index === aigu){ //Si l'index correspond au bouton cliqué par l'utilisateur pour la fréquence aigue
         feedback.textContent = (langactuelle === "fr") ? "Bonne réponse!" : "Good answer!";
         setTimeout(demarrerADT, 2500); //Attente de 2,5 secondes avant de pouvoir recommencer 
-    } else {
+    } else { //Si l'index ne correspond pas au bouton cliqué par l'utilisateur pour la fréquence aigue
         feedback.textContent = (langactuelle === "fr") ? "Mauvaise réponse" : "Wrong answer";
         setTimeout(demarrerADT, 2500);
     }
 }
+/**
+*Fonction d'arrêt du jeu de ADT.
+*Cette fonction retire l'affichage (réinitialise l'interface utilisateur) et nettoie la chaîne audio.
+*/
 function arreterADT(){
     if (!adtEnCours) return;
 
     moteuraudio.arretSon(); //Arrêt de tous les sons
-    adtEnCours = false;
+    adtEnCours = false; //Mise à jour de la variable d'état globale (jeu inactif)
     optionsADT.style.display = "none"; //Cache les boutons quand le jeu s'arrête
+    
     //Réinitialisation des boutons
     boutonsonun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
     boutonsondeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
     boutonchoixun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
     boutonchoixdeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
     boutonADT.textContent = (langactuelle === "fr") ? "Commencer le jeu" : "Start Game";
-    feedback.textContent = "";
+    feedback.textContent = ""; //Cache le message de feedback
 }
-function frequencesADT(){ //Fonction qui choisit les valeurs aléatoires des fréquences à jouer à l'utilisateur 
-    const f_ac = freq_ac || parseFloat(curseurfreq.value);
-    const i = Math.floor(Math.random()*(700-300+1)+300); //Math.floor pour arrondir à l'entier inférieur et Math.random pour générer un nombre entre 0 et 1
-    const nombre = Math.random()<0.5; //On génère un nombre au hasard entre 0 et 1, et on détermine s'il est inférieur à 0,5
+/**
+*Fonction qui génère les fréquences à jouer pour le jeu de ADT en fonction de la fréquence des acouphènes de l'utilisateur. 
+*Elle génère deux fréquences aléatoires, une aigue et une plus grave. 
+*/
+function frequencesADT(){ /
+    const f_ac = freq_ac || parseFloat(curseurfreq.value); //Fréquence des acouphènes
 
+    //On génère un nombre aléatoire entre 300Hz et 700Hz qui déterminera l'écart à la fréquence des acouphènes
+    const i = Math.floor(Math.random()*(700-300+1)+300); //Math.floor permet d'arrondir à l'entier inférieur et Math.random permet de générer un nombre entre 0 et 1
+
+    //On génère un nombre aléatoire entre 0 et 1, on regarde s'il est supérieur ou inférieur à 0.5 pour déterminer quelle fréquence (1 ou 2) sera aigue
+    const nombre = Math.random()<0.5; 
+    
     if (nombre){ //Si le nombre est inférieur à 0.5, la fréquence 1 est aigue
         freq_un = f_ac + i;
         freq_deux = f_ac -i;
@@ -936,6 +967,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
