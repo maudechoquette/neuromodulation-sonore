@@ -726,26 +726,29 @@ function frequencesADT(){ /
     }
 }
 
-// Démarrage des thérapies en fonction de celle choisie et gestion des boutons
 
+// Démarrage des thérapies en fonction de celle choisie et gestion des boutons //
+
+//Gestionnaire du bouton qui permet de démarrer/arrêter la TMNMT
 boutonTMNMT?.addEventListener('click', () => {
     if (!tmnmtEnCours || tmnmtEnPause){
         if (tmnmtEnPause) {
             PauseTMNMT(); // Reprise de la session si le bouton de reprise est pressé
         } else if (tmnmtMode === 'base'){
-            demarrerTMNMT();
+            demarrerTMNMT(); //Démarrage du mode de base
         } else if (tmnmtMode === 'personnalise'){
-            demarrerTMNMT_fichier();
+            demarrerTMNMT_fichier(); //Démarrage du mode personnalisé (fichier importé)
         }
-
     } else arreterTMNMT();
 });
+//Gestionnaire du bouton qui permet de mettre en pause/reprendre la TMNMT
 boutonPauseTMNMT?.addEventListener('click', () => {
     if (tmnmtEnCours) {
         PauseTMNMT();
     }
 })
 
+//Gestionnaire du bouton qui permet de démarrer/arrêter la MWT
 boutonMWT?.addEventListener('click', ()=>{
     if (mwtEnPause) {
         PauseMWT();
@@ -755,23 +758,30 @@ boutonMWT?.addEventListener('click', ()=>{
         arreterMWT();
     }
 });
+//Gestionnaire du bouton qui permet de mettre en pause/reprendre la MWT
 boutonPauseMWT?.addEventListener('click', () => {
     if (mwtEnCours){
         PauseMWT();
     }
 });
 
+//Gestionnaire du bouton qui permet de démarrer/arrêter le jeu ADT
 boutonADT?.addEventListener('click', () => {
     if (!adtEnCours) demarrerADT();
     else arreterADT();
 });
+//Gestionnaire du bouton de lecture/arrêt du premier son
 boutonsonun.addEventListener('click', () => {
     jouerADT(boutonsonun, freq_un);
 });
+;
+//Gestionnaire du bouton de lecture/arrêt du deuxième son
 boutonsondeux.addEventListener('click', () => {
     jouerADT(boutonsondeux, freq_deux);
 });
+//Gestionnaire du bouton de réponse pour le choix du premier son
 boutonchoixun.addEventListener('click', () => reponsesADT(1));
+//Gestionnaire du bouton de réponse pour le choix du deuxième son
 boutonchoixdeux.addEventListener('click', () => reponsesADT(2));
 
 // Génération du fichier PDF
@@ -938,6 +948,7 @@ const i18n = {
     }
 };
 
+//Définition du fran^cais comme la langue de départ
 let langactuelle = "fr"
 
 //Définition de la fonction permettant de changer la langue
@@ -967,6 +978,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
