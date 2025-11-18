@@ -707,7 +707,7 @@ function arreterADT(){
 *Fonction qui génère les fréquences à jouer pour le jeu de ADT en fonction de la fréquence des acouphènes de l'utilisateur. 
 *Elle génère deux fréquences aléatoires, une aigue et une plus grave. 
 */
-function frequencesADT(){ /
+function frequencesADT(){ 
     const f_ac = freq_ac || parseFloat(curseurfreq.value); //Fréquence des acouphènes
 
     //On génère un nombre aléatoire entre 300Hz et 700Hz qui déterminera l'écart à la fréquence des acouphènes
@@ -993,6 +993,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
