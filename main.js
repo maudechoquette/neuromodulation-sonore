@@ -784,14 +784,26 @@ boutonchoixun.addEventListener('click', () => reponsesADT(1));
 //Gestionnaire du bouton de réponse pour le choix du deuxième son
 boutonchoixdeux.addEventListener('click', () => reponsesADT(2));
 
-// Génération du fichier PDF
+/**
+*Fonction qui permet de générer le rapport en fichier PDF.
+*Le fichier inclut, dans la langue préférée de l'utilisateur, la date, l'heure, le type de thérapie, la durée de la séance, le nom du fichier importé (s'il y a lieu)...
+*@param {String} therapie, le type de thérapie choisie (TMNMT ou MWT).
+*@param {String} dureeChoisie, la durée de séance sélectionnée par l'utilisateu (déja formatée en chaîne de caractères).
+*@param {String} dureeEcoute, la durée réelle d'écoute de la séance (déja formatée en chaîne de caractères).
+*@param {String} f_ac, la fréquence des acouphènes de l'utilisateur (déja formatée en chaîne de caractères).
+*@param {String} typeSon, le type de son sélectionné pour la thérapie TMNMT (s'il y a lieu).
+*@param {String} nomFichier, le nom du fichier importé par l'utilisateur pour la TMNMT (s'il y a lieu).
+*/
 function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier) {
+    //Initialisation de jsPDF (bibliothèque qui permet de générer des documents PDF)
     const {jsPDF} = window.jspdf;
+    //Création d'un nouveau document PDF 
     const doc = new jsPDF('p', 'mm', 'a4');
 
-    let y = 15;
-    const lineHeight = 8;
-    const xStart = 10;
+    //Variables de positionnement
+    let y = 15; //Hauteur
+    const lineHeight = 8; //Espacement entre les lignes
+    const xStart = 10; //Marge (gauche)
 
     //Titres (anglais et français)
     doc.setFontSize(16);
@@ -978,6 +990,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
