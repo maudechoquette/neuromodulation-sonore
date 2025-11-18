@@ -10,6 +10,7 @@ const moteuraudio = new ModulateurAudio();
 
 // Initialisations //
 
+let langactuelle = "fr"; //Variable d'état de la langue (français par défaut)
 let enLecture = false; //Variable d'état globale de la lecture audio 
 let freq_ac = null; //Stockage de la fréquence des acouphènes de l'utilisateur 
 
@@ -960,12 +961,14 @@ const i18n = {
     }
 };
 
-//Définition du fran^cais comme la langue de départ
-let langactuelle = "fr"
 
-//Définition de la fonction permettant de changer la langue
+/**
+*Fonction qui permet de changer la langue de l'interface utilisateur. Elle met à jour tout le texte grâce au dictionnaire i18n.
+*@param {String} lang, la nouvelle langue à appliquer ("fr" pour français et "en" pour anglais)
+*/
 function changerlang(lang) {
-    langactuelle = lang;
+    langactuelle = lang; //Mise à jour de la variable d'état globale de la langue.
+    
     //Traduction des textes
     $$("[data-i18n]").forEach((element) => { //Sélection des éléments avec l'attribut data-i18n
         const key = element.getAttribute("data-i18n"); //Lecture de la valeur des éléments
@@ -990,6 +993,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
