@@ -68,7 +68,7 @@ export class ModulateurAudio {
     *Méthode qui permet la lecture des tons purs de fréquence, forme d'onde et gain choisis.
     *@param {Number} freq, la fréquence voulue (8000Hz par défaut)
     *@param {String} type, la forme d'onde voulue (sinusoide par défaut)
-    *@param {Number] db, le gain (-36 dBFS par défaut)
+    *@param {Number} db, le gain (-36 dBFS par défaut)
     */
     jouerPitch(freq = 8000, type = "sine", db = -36){ //Fonction jouant les sons pour le pitch-matching
         this.arretSon(); //Arrêt d'un son avant d'en jouer un nouveau
@@ -290,7 +290,7 @@ export class ModulateurAudio {
     *musicale personnalisée avec suppression de bande fréquentielle. 
     *@param {AudioNode} src, le signal sinusoidal source à moduler.
     *@param {Number} f_ac, la fréquence des acouphènes de l'utilisateur. 
-    *@returns {{notch: BiquadFilterNode}, {lowPeak: BiquadFilterNode}, {highPeak: BiquadFilterNode}, les noeuds contenant les filtres de traîtement (pour permettre le nettoyage de la chaine par la suite) 
+    *@returns {{notch: BiquadFilterNode}, {lowPeak: BiquadFilterNode}, {highPeak: BiquadFilterNode}}, les noeuds contenant les filtres de traîtement (pour permettre le nettoyage de la chaine par la suite) 
     */
     ChaineTMNMT(src, f_ac){
         //Retrait d'1/2 octave autour de la fréquence de l'acouphène
@@ -327,7 +327,7 @@ export class ModulateurAudio {
     *musicale personnalisée avec suppression de bande fréquentielle. Cette fonction permet uniquement de modifier le fichier mais n'inclus pas sa récupération et son décodage.
     *@param {AudioNode} src, le fichier audio source importé.
     *@param {Number} f_ac, la fréquence des acouphènes de l'utilisateur.
-    *@returns {{notch: BiquadFilterNode}, {lowPeak: BiquadFilterNode}, {highPeak: BiquadFilterNode}, les noeuds contenant les filtres de traîtement (pour permettre le nettoyage de la chaine par la suite) 
+    *@returns {{notch: BiquadFilterNode}, {lowPeak: BiquadFilterNode}, {highPeak: BiquadFilterNode}}, les noeuds contenant les filtres de traîtement (pour permettre le nettoyage de la chaine par la suite) 
     */
     async ChaineTMNMT_Audio(src, f_ac){
         // Dans le cas d'un fichier audio importé, l'égalisation du spectre (méthode dédiée à cet effet) est nécessaire. 
@@ -447,7 +447,7 @@ export class ModulateurAudio {
             }
         }; 
     }
-}
+
 
     /**
     *@method ModulerAudio 
@@ -491,13 +491,4 @@ export class ModulateurAudio {
         return buffer;
     }
 }
-
-
-
-
-
-
-
-
-
 
