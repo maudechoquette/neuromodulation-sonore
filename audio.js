@@ -62,6 +62,29 @@ export class ModulateurAudio {
         this.gain.gain.setTargetAtTime(dbToLin(db), this.std.currentTime, 0.05) //setTargetAtTime permet d'appliquer une rampe exponentielle vers la nouvelle valeur. Un délai de 0,05 secondes est imposée pour adoucir la transition
     }
 
+    /**
+    *@method arretSon
+    *Méthode qui permet l'arrêt du son en sortie. 
+    */
+    arretSon(){ 
+        if (!this.sonActuel) return; //Si aucun son n'est en cours, on sort directement de la fonction
+        if (this.sonActuel.osc){ //Si un son (oscillateur) est en lecture
+            const {osc, g} = this.sonActuel;
+            try {osc.stop(this.std.currentTime + 0.02); } catch {} //Arrêt de l'oscillateur
+            try {g.disconnect(); } catch {} //Arrêt du gain
+        } else if (this.sonActuel.type === 'fichier'){ //Si le son en cours vient d'un fichier importé par l'utilisateur
+            const {source_audio, source_gain, notch, lowPeak, highPeak} = this.sonActuel;
+            //Déconnexion de tous les noeuds de filtrage de la chaîne de traitement (source, gain, et filtres)
+            try {source_audio.stop(this.std.currentTime + 0.02); } catch {}
+            try {source_gain.disconnect();} catch {}
+            try {notch.disconnect();} catch {}
+            try {lowPeak.disconnect();} catch {}
+            try {highPeak.disconnect();} catch {}
+        }
+
+        this.sonActuel = null; //Réinitialisation du son
+    }
+
     // Test de pitch-matching 
     /**
     *@method jouerPitch
@@ -95,28 +118,6 @@ export class ModulateurAudio {
         this.sonActuel.osc.frequency.setTargetAtTime(freq, this.std.currentTime, 0.01); //Rampe exponentielle vers la nouvelle fréquence avec un délai de 0,01 secondes.
     }
 
-    /**
-    *@method arretSon
-    *Méthode qui permet l'arrêt du son en sortie. 
-    */
-    arretSon(){ 
-        if (!this.sonActuel) return; //Si aucun son n'est en cours, on sort directement de la fonction
-        if (this.sonActuel.osc){ //Si un son (oscillateur) est en lecture
-            const {osc, g} = this.sonActuel;
-            try {osc.stop(this.std.currentTime + 0.02); } catch {} //Arrêt de l'oscillateur
-            try {g.disconnect(); } catch {} //Arrêt du gain
-        } else if (this.sonActuel.type === 'fichier'){ //Si le son en cours vient d'un fichier importé par l'utilisateur
-            const {source_audio, source_gain, notch, lowPeak, highPeak} = this.sonActuel;
-            //Déconnexion de tous les noeuds de filtrage de la chaîne de traitement (source, gain, et filtres)
-            try {source_audio.stop(this.std.currentTime + 0.02); } catch {}
-            try {source_gain.disconnect();} catch {}
-            try {notch.disconnect();} catch {}
-            try {lowPeak.disconnect();} catch {}
-            try {highPeak.disconnect();} catch {}
-        }
-
-        this.sonActuel = null; //Réinitialisation du son
-    }
 
     /**
     *@method creerSonBlanc
@@ -491,4 +492,5 @@ export class ModulateurAudio {
         return buffer;
     }
 }
+
 
