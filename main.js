@@ -706,6 +706,14 @@ function arreterADT(){
     adtEnCours = false; //Mise à jour de la variable d'état globale (jeu inactif)
     optionsADT.style.display = "none"; //Cache les boutons quand le jeu s'arrête
 
+    //Sauvegarde des score avant de les réinitialiser 
+    const bonnes = bonnes_reponses;
+    const mauvaises = mauvaises_reponses;
+
+    //Réinitialisation du décompte
+    bonnes_reponses = 0;
+    mauvaises_reponses = 0;
+    
     genererBoutonRapportADT();
     
     //Réinitialisation des boutons
@@ -715,13 +723,9 @@ function arreterADT(){
     boutonchoixdeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
     boutonADT.textContent = (langactuelle === "fr") ? "Commencer le jeu" : "Start Game";
     feedback.textContent = ""; //Cache le message de feedback
-
-    //Réinitialisation du décompte
-    bonnes_reponses = 0;
-    mauvaises_reponses = 0;
 }
 
-function genererBoutonRapportADT(){
+function genererBoutonRapportADT(bonnes_reponses, mauvaises_reponses){
     //Affichage du bouton
     adtRapport.innerHTML = '';
     const boutonRapport = document.createElement('button');
@@ -1046,6 +1050,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
