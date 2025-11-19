@@ -826,7 +826,7 @@ boutonchoixdeux.addEventListener('click', () => reponsesADT(2));
 *@param {String} typeSon, le type de son sélectionné pour la thérapie TMNMT (s'il y a lieu).
 *@param {String} nomFichier, le nom du fichier importé par l'utilisateur pour la TMNMT (s'il y a lieu).
 */
-function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, bonnes_reponses, mauvaises_reponses, nombres_parties) {
+function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, bonnes_reponses, mauvaises_reponses, nombre_parties) {
     //Initialisation de jsPDF (bibliothèque qui permet de générer des documents PDF)
     const {jsPDF} = window.jspdf;
     //Création d'un nouveau document PDF 
@@ -904,18 +904,16 @@ function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeS
             y += lineHeight *2;
         }    
     } else if (therapie === 'ADT'){
-        if (langactuelle === 'fr){
+        if (langactuelle === "fr"){
             doc.text(`Type de thérapie choisie: entraînement à la discrimination auditive`,xStart, y);
             y += lineHeight;
-            parties_jouees = bonnes_reponses + mauvaises_reponses
             doc.text(`Nombre de manches jouées: ${parties_jouees}`, xStart, y);
             y += lineHeight;
             doc.text(`Nombre de bonnes réponses: ${bonnes_reponses}`, xStart, y);
         } else {
             doc.text(`Chosen therapy type: auditory discrimination training`,xStart, y);
             y += lineHeight;
-            parties_jouees = bonnes_reponses + mauvaises_reponses
-            doc.text(`Number of rounds played: ${nombres_parties}`, xStart, y);
+            doc.text(`Number of rounds played: ${nombre_parties}`, xStart, y);
             y += lineHeight;
             doc.text(`Number of right answers: ${bonnes_reponses}`, xStart, y);
             }    
@@ -1042,6 +1040,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
