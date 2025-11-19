@@ -39,6 +39,8 @@ let adtEnCours = false;
 let freq_un = 0;
 let freq_deux = 0;
 let aigu = 0;
+let bonnes_reponses = 0;
+let mauvaises_reponses = 0;
 
 
 // Sélecteurs //
@@ -678,9 +680,11 @@ function reponsesADT(index){
 
     if (index === aigu){ //Si l'index correspond au bouton cliqué par l'utilisateur pour la fréquence aigue
         feedback.textContent = (langactuelle === "fr") ? "Bonne réponse!" : "Good answer!";
+        bonnes_reponses ++;
         setTimeout(demarrerADT, 2500); //Attente de 2,5 secondes avant de pouvoir recommencer 
     } else { //Si l'index ne correspond pas au bouton cliqué par l'utilisateur pour la fréquence aigue
         feedback.textContent = (langactuelle === "fr") ? "Mauvaise réponse" : "Wrong answer";
+        mauvaises_reponses ++;
         setTimeout(demarrerADT, 2500);
     }
 }
@@ -702,6 +706,16 @@ function arreterADT(){
     boutonchoixdeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
     boutonADT.textContent = (langactuelle === "fr") ? "Commencer le jeu" : "Start Game";
     feedback.textContent = ""; //Cache le message de feedback
+
+    //Réinitialisation du décompte
+    bonnes_reponses = 0;
+    mauvaises_reponses = 0;
+    const nombre_parties = bonnes_reponses + mauvaises_reponses;
+
+    const f_ac = freq_ac || parseFloat(curseurfreq.value); //Fréquence des acouphènes (curseur)
+    const fAc = `${f_ac} Hz`; //Mise en forme pour le rapport
+
+    genererBoutonRapport(therapie = 'ADT', fAc = fAc, bonnes_reponses = bonnes_reponses, mauvaises_reponses = mauvaises_reponses, nombres_parties = nombres_parties);
 }
 /**
 *Fonction qui génère les fréquences à jouer pour le jeu de ADT en fonction de la fréquence des acouphènes de l'utilisateur. 
@@ -795,7 +809,7 @@ boutonchoixdeux.addEventListener('click', () => reponsesADT(2));
 *@param {String} typeSon, le type de son sélectionné pour la thérapie TMNMT (s'il y a lieu).
 *@param {String} nomFichier, le nom du fichier importé par l'utilisateur pour la TMNMT (s'il y a lieu).
 */
-function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier) {
+function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, bonnes_reponses, mauvaises_reponses, nombres_parties) {
     //Initialisation de jsPDF (bibliothèque qui permet de générer des documents PDF)
     const {jsPDF} = window.jspdf;
     //Création d'un nouveau document PDF 
@@ -824,54 +838,72 @@ function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeS
 
     //Informations de la séance 
     y += lineHeight;
-
-    if (langactuelle === "fr"){
-        if (therapie === 'TMNMT'){
-            doc.text(`Type de thérapie choisie: thérapie musicale personnalisée avec suppression de bande fréquentielle`, xStart, y);
-            y += lineHeight;
-            doc.text(`Mode d'écoute : ${mode}`, xStart, y);
-            y += lineHeight;
-            if (mode === "Sons de base"){
-                doc.text(`Type de son : ${typeSon}`, xStart, y);
+    if (therapie === 'TMNMT' || therapie === 'MWT'){
+        if (langactuelle === "fr"){
+            if (therapie === 'TMNMT'){
+                doc.text(`Type de thérapie choisie: thérapie musicale personnalisée avec suppression de bande fréquentielle`, xStart, y);
                 y += lineHeight;
-            } else if (mode === "Fichier audio importé"){
-                doc.text(`Fichier importé : ${nomFichier}`, xStart, y);
+                doc.text(`Mode d'écoute : ${mode}`, xStart, y);
                 y += lineHeight;
-            }
-        } else if (therapie === 'MWT'){
-            doc.text(`Type de thérapie choisie: thérapie par sons modulés`,xStart, y);
-            y += lineHeight;
-        }
-        doc.text(`Durée de séance choisie: ${dureeChoisie}`, xStart, y);
-        y += lineHeight;
-        doc.text(`Durée d'écoute : ${dureeEcoute}`, xStart, y);
-        y += lineHeight;
-        doc.text(`Fréquence d'acouphènes sélectionnée: ${fAc}`, xStart, y);
-        y += lineHeight *2;
-    } else {
-        if (therapie === 'TMNMT'){
-            doc.text(`Chosen therapy type: tailor-made notched music training`, xStart, y);
-            y += lineHeight;
-            doc.text(`Mode : ${mode}`, xStart, y);
-            y += lineHeight;
-            if (mode === "Sons de base"){
-                doc.text(`Sound type : ${typeSon}`, xStart, y);
-                y += lineHeight;
-            } else if (mode === "Fichier audio importé"){
-                doc.text(`Imported file : ${nomFichier}`, xStart, y);
+                if (mode === "Sons de base"){
+                    doc.text(`Type de son : ${typeSon}`, xStart, y);
+                    y += lineHeight;
+                } else if (mode === "Fichier audio importé"){
+                    doc.text(`Fichier importé : ${nomFichier}`, xStart, y);
+                    y += lineHeight;
+                }
+            } else if (therapie === 'MWT'){
+                doc.text(`Type de thérapie choisie: thérapie par sons modulés`,xStart, y);
                 y += lineHeight;
             }
-        } else if (therapie === 'MWT'){
-            doc.text(`Chosen therapy type: modulated wave therapy`, xStart, y);
+            doc.text(`Durée de séance choisie: ${dureeChoisie}`, xStart, y);
             y += lineHeight;
-        }
-        doc.text(`Chosen session time: ${dureeChoisie}`, xStart, y);
-        y += lineHeight;
-        doc.text(`Listening time : ${dureeEcoute}`, xStart, y);
-        y += lineHeight;
-        doc.text(`Tinnitus frequency: ${fAc}`, xStart, y);
-        y += lineHeight *2;
+            doc.text(`Durée d'écoute : ${dureeEcoute}`, xStart, y);
+            y += lineHeight;
+            doc.text(`Fréquence d'acouphènes sélectionnée: ${fAc}`, xStart, y);
+            y += lineHeight *2;
+        } else {
+            if (therapie === 'TMNMT'){
+                doc.text(`Chosen therapy type: tailor-made notched music training`, xStart, y);
+                y += lineHeight;
+                doc.text(`Mode : ${mode}`, xStart, y);
+                y += lineHeight;
+                if (mode === "Sons de base"){
+                    doc.text(`Sound type : ${typeSon}`, xStart, y);
+                    y += lineHeight;
+                } else if (mode === "Fichier audio importé"){
+                    doc.text(`Imported file : ${nomFichier}`, xStart, y);
+                    y += lineHeight;
+                }
+            } else if (therapie === 'MWT'){
+                doc.text(`Chosen therapy type: modulated wave therapy`, xStart, y);
+                y += lineHeight;
+            }
+            doc.text(`Chosen session time: ${dureeChoisie}`, xStart, y);
+            y += lineHeight;
+            doc.text(`Listening time : ${dureeEcoute}`, xStart, y);
+            y += lineHeight;
+            doc.text(`Tinnitus frequency: ${fAc}`, xStart, y);
+            y += lineHeight *2;
+        }    
+    } else if (therapie === 'ADT'){
+        if (langactuelle === 'fr){
+            doc.text(`Type de thérapie choisie: entraînement à la discrimination auditive`,xStart, y);
+            y += lineHeight;
+            parties_jouees = bonnes_reponses + mauvaises_reponses
+            doc.text(`Nombre de manches jouées: ${parties_jouees}`, xStart, y);
+            y += lineHeight;
+            doc.text(`Nombre de bonnes réponses: ${bonnes_reponses}`, xStart, y);
+        } else {
+            doc.text(`Chosen therapy type: auditory discrimination training`,xStart, y);
+            y += lineHeight;
+            parties_jouees = bonnes_reponses + mauvaises_reponses
+            doc.text(`Number of rounds played: ${nombres_parties}`, xStart, y);
+            y += lineHeight;
+            doc.text(`Number of right answers: ${bonnes_reponses}`, xStart, y);
+            }    
     }
+    
 
     //Sauvegarde du fichier
     const datePourNom = new Date().toISOString().slice(0,10);
@@ -993,6 +1025,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
