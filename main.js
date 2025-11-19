@@ -661,7 +661,7 @@ function jouerADT(button, freq){
     
     //Sinon, on joue le ton à la fréquence voulue (onde sinusoidale à -36dBFS)
     moteuraudio.jouerPitch(freq, "sine", -36);
-    button.textContent = (langactuelle === "fr) ? "Arrêter" : "Stop";
+    button.textContent = (langactuelle === "fr") ? "Arrêter" : "Stop";
 }
 /**
 *Fonction de gestion et vérification des réponses du jeu de ADT. 
@@ -1043,4 +1043,5 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
