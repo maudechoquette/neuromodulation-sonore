@@ -682,11 +682,13 @@ function reponsesADT(index){
     if (index === aigu){ //Si l'index correspond au bouton cliqué par l'utilisateur pour la fréquence aigue
         feedback.textContent = (langactuelle === "fr") ? "Bonne réponse!" : "Good answer!";
         bonnes_reponses ++;
-        setTimeout(demarrerADT, 2500); //Attente de 2,5 secondes avant de pouvoir recommencer 
     } else { //Si l'index ne correspond pas au bouton cliqué par l'utilisateur pour la fréquence aigue
         feedback.textContent = (langactuelle === "fr") ? "Mauvaise réponse" : "Wrong answer";
         mauvaises_reponses ++;
-        setTimeout(demarrerADT, 2500);
+    }
+
+    if (adtEnCours) {
+        setTimeout(demarrerADT, 2500); //Attente de 2,5 secondes avant de pouvoir recommencer 
     }
 }
 /**
@@ -1040,24 +1042,3 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
