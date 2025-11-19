@@ -907,7 +907,7 @@ function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeS
         if (langactuelle === "fr"){
             doc.text(`Type de thérapie choisie: entraînement à la discrimination auditive`,xStart, y);
             y += lineHeight;
-            doc.text(`Nombre de manches jouées: ${parties_jouees}`, xStart, y);
+            doc.text(`Nombre de manches jouées: ${nombre_parties}`, xStart, y);
             y += lineHeight;
             doc.text(`Nombre de bonnes réponses: ${bonnes_reponses}`, xStart, y);
         } else {
@@ -1040,6 +1040,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
