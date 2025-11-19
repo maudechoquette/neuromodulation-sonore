@@ -632,7 +632,7 @@ async function demarrerADT(){
     stopPitchMatching(); //Arrêt du son de pitch-matching s'il y en a un en cours
     try {arreterTMNMT();} catch {} //Arrêt de la TMNMT si elle est en cours
     try {arreterMWT();} catch {} //Arrêt de la MWT si elle est en encours
-    arreterADT(); //Arrêt de l'ancien jeu (au cas où)
+    //arreterADT(); //Arrêt de l'ancien jeu (au cas où)
 
     //Génération des fréquences aléatoires aigues et graves (fonction dédiée à cet effet) en fonction de la fréquence des acouphènes
     frequencesADT(); 
@@ -1040,6 +1040,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
