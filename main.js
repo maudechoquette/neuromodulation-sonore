@@ -41,6 +41,7 @@ let freq_deux = 0;
 let aigu = 0;
 let bonnes_reponses = 0;
 let mauvaises_reponses = 0;
+let manchePrete = false; //indique si une manche du jeu est en cours
 
 
 // Sélecteurs //
@@ -635,8 +636,8 @@ async function demarrerADT(){
 
     //Génération des fréquences aléatoires aigues et graves (fonction dédiée à cet effet) en fonction de la fréquence des acouphènes
     frequencesADT(); 
-    
     adtEnCours = true; //Mise à jour de la variable d'état globale (jeu en état actif)
+    manchePrete = true; //Active la manche
     
     optionsADT.style.display = "block"; //Affichage des boutons du jeux (optionsADT)
     feedback.textContent = "";
@@ -669,7 +670,8 @@ function jouerADT(button, freq){
 *@param {Number} index, l'indice du son choisi par l'utilisateur (1 ou 2)
 */
 function reponsesADT(index){ 
-    if (!adtEnCours) return;
+    if (!adtEnCours || !manchePrete) return;
+    manchePrete = false;
 
     moteuraudio.arretSon(); //Arrêt de tous les sons
     //Réinitialisation des boutons 
@@ -1044,6 +1046,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
