@@ -443,7 +443,7 @@ function genererBoutonRapportTMNMT(temps_ecoute, dureeChoisieMinutes){
 
     //Génération du rapport lorsque le bouton est cliqué
     boutonRapport.addEventListener('click', () => {
-        genererRapportPDF('TMNMT', dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, 'N/A', 'N/A', 'N/A'); //Appel d'une fonction dédiée à cet effet 
+        genererRapportPDF('TMNMT', dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, 'N/A', 'N/A'); //Appel d'une fonction dédiée à cet effet 
     });
 
     tmnmtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans le conteneur 
@@ -616,7 +616,7 @@ function genererBoutonRapportMWT(temps_ecoute){
 
     //Génération du rapport lorsque le bouton est cliqué
     boutonRapport.addEventListener('click', () => {
-        genererRapportPDF('MWT', dureeChoisie, dureeEcoute, fAc, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A');
+        genererRapportPDF('MWT', dureeChoisie, dureeEcoute, fAc, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A');
     });
 
     mwtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans son conteneur
@@ -724,7 +724,12 @@ function arreterADT(){
     boutonADT.textContent = (langactuelle === "fr") ? "Commencer le jeu" : "Start Game";
     feedback.textContent = ""; //Cache le message de feedback
 }
-
+/**
+*Fonction qui affiche un bouton permettant de télécharger le rapport après une séance de thérapie ADT. Cette fonction permet d'afficher le bouton et de stocker les éléments
+*à ajouter dans le rapport mais ne génère pas le rapport.
+*@param {Number} bonnes_reponses, le nombre de bonnes réponses de l'utilisateur. 
+*@param {Number} mauvaises_reponses, le nombre de mauvaises réponses de l'utilisateur. 
+*/
 function genererBoutonRapportADT(bonnes_reponses, mauvaises_reponses){
     //Affichage du bouton
     adtRapport.innerHTML = '';
@@ -734,11 +739,11 @@ function genererBoutonRapportADT(bonnes_reponses, mauvaises_reponses){
     //Informations pour le rapport
     const f_ac = freq_ac || parseFloat(curseurfreq.value);
     const fAc = `${f_ac} Hz`;
-    const nombre_parties = bonnes_reponses + mauvaises_reponses;
+    const nombre_parties = bonnes_reponses + mauvaises_reponses; //Calcul du nombre total de parties jouées 
 
     //Génération du rapport lorsque le bouton est cliqué
     boutonRapport.addEventListener('click', () => {
-        genererRapportPDF('ADT', 'N/A', 'N/A', fAc, 'N/A', 'N/A', 'N/A', bonnes_reponses, mauvaises_reponses, nombre_parties);
+        genererRapportPDF('ADT', 'N/A', 'N/A', fAc, 'N/A', 'N/A', 'N/A', bonnes_reponses, nombre_parties);
     });
 
     adtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans son conteneur
@@ -835,8 +840,10 @@ boutonchoixdeux.addEventListener('click', () => reponsesADT(2));
 *@param {String} f_ac, la fréquence des acouphènes de l'utilisateur (déja formatée en chaîne de caractères).
 *@param {String} typeSon, le type de son sélectionné pour la thérapie TMNMT (s'il y a lieu).
 *@param {String} nomFichier, le nom du fichier importé par l'utilisateur pour la TMNMT (s'il y a lieu).
+*@param {Number} bonnes_reponses, le nombre de bonnes réponses de l'utilisateur. 
+*@param {Number} nombre_parties, le nombre de manches jouées par l'utilisateur. 
 */
-function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, bonnes_reponses, mauvaises_reponses, nombre_parties) {
+function genererRapportPDF(therapie, dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, bonnes_reponses, nombre_parties) {
     //Initialisation de jsPDF (bibliothèque qui permet de générer des documents PDF)
     const {jsPDF} = window.jspdf;
     //Création d'un nouveau document PDF 
@@ -1050,6 +1057,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
