@@ -441,7 +441,7 @@ function genererBoutonRapportTMNMT(temps_ecoute, dureeChoisieMinutes){
 
     //Génération du rapport lorsque le bouton est cliqué
     boutonRapport.addEventListener('click', () => {
-        genererRapportPDF('TMNMT', dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier); //Appel d'une fonction dédiée à cet effet 
+        genererRapportPDF('TMNMT', dureeChoisie, dureeEcoute, fAc, mode, typeSon, nomFichier, 'N/A', 'N/A', 'N/A'); //Appel d'une fonction dédiée à cet effet 
     });
 
     tmnmtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans le conteneur 
@@ -614,7 +614,7 @@ function genererBoutonRapportMWT(temps_ecoute){
 
     //Génération du rapport lorsque le bouton est cliqué
     boutonRapport.addEventListener('click', () => {
-        genererRapportPDF('MWT', dureeChoisie, dureeEcoute, fAc, 'N/A', 'N/A', 'N/A');
+        genererRapportPDF('MWT', dureeChoisie, dureeEcoute, fAc, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A');
     });
 
     mwtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans son conteneur
@@ -710,13 +710,32 @@ function arreterADT(){
     //Réinitialisation du décompte
     bonnes_reponses = 0;
     mauvaises_reponses = 0;
-    const nombre_parties = bonnes_reponses + mauvaises_reponses;
 
     const f_ac = freq_ac || parseFloat(curseurfreq.value); //Fréquence des acouphènes (curseur)
     const fAc = `${f_ac} Hz`; //Mise en forme pour le rapport
 
-    genererBoutonRapport(therapie = 'ADT', fAc = fAc, bonnes_reponses = bonnes_reponses, mauvaises_reponses = mauvaises_reponses, nombres_parties = nombres_parties);
+    genererBoutonRapportADT();
 }
+
+function genererBoutonRapportADT(temps_ecoute){
+    //Affichage du bouton
+    adtRapport.innerHTML = '';
+    const boutonRapport = document.createElement('button');
+    boutonRapport.textContent = (langactuelle === "fr") ? "Télécharger le rapport de séance" : "Download session report";
+
+    //Informations pour le rapport
+    const f_ac = freq_ac || parseFloat(curseurfreq.value);
+    const fAc = `${f_ac} Hz`;
+    const nombre_parties = bonnes_reponses + mauvaises_reponses;
+
+    //Génération du rapport lorsque le bouton est cliqué
+    boutonRapport.addEventListener('click', () => {
+        genererRapportPDF('ADT', 'N/A', 'N/A', fAc, 'N/A', 'N/A', 'N/A', bonnes_reponses, mauvaises_reponses, nombres_parties);
+    });
+
+    adtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans son conteneur
+}
+
 /**
 *Fonction qui génère les fréquences à jouer pour le jeu de ADT en fonction de la fréquence des acouphènes de l'utilisateur. 
 *Elle génère deux fréquences aléatoires, une aigue et une plus grave. 
@@ -1025,6 +1044,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
