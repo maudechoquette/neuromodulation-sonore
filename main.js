@@ -714,7 +714,7 @@ function arreterADT(){
     bonnes_reponses = 0;
     mauvaises_reponses = 0;
     
-    genererBoutonRapportADT();
+    genererBoutonRapportADT(bonnes, mauvaises);
     
     //Réinitialisation des boutons
     boutonsonun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
@@ -1050,6 +1050,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
