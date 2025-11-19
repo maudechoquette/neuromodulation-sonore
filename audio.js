@@ -298,7 +298,7 @@ export class ModulateurAudio {
         const notch = this.std.createBiquadFilter();
         notch.type = "notch";
         notch.frequency.value = f_ac;
-        notch.Q.value = 1.4; //Facteur de qualité de la largeur d'un demi-octave
+        notch.Q.value = 2.87; //Facteur de qualité de la largeur d'un demi-octave
         
         //Augmentation de 20dB des fréquences de 3/8 d'octaves de chaque côté de f_ac
         const lowPeak = this.std.createBiquadFilter();
@@ -492,5 +492,6 @@ export class ModulateurAudio {
         return buffer;
     }
 }
+
 
 
