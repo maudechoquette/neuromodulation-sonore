@@ -632,7 +632,6 @@ async function demarrerADT(){
     stopPitchMatching(); //Arrêt du son de pitch-matching s'il y en a un en cours
     try {arreterTMNMT();} catch {} //Arrêt de la TMNMT si elle est en cours
     try {arreterMWT();} catch {} //Arrêt de la MWT si elle est en encours
-    //arreterADT(); //Arrêt de l'ancien jeu (au cas où)
 
     //Génération des fréquences aléatoires aigues et graves (fonction dédiée à cet effet) en fonction de la fréquence des acouphènes
     frequencesADT(); 
@@ -640,6 +639,8 @@ async function demarrerADT(){
     adtEnCours = true; //Mise à jour de la variable d'état globale (jeu en état actif)
     
     optionsADT.style.display = "block"; //Affichage des boutons du jeux (optionsADT)
+    feedback.textContent = "";
+    feedback.style.opacity = "0";
     boutonADT.textContent = (langactuelle === "fr") ? "Arrêter le jeu" : "Stop game"; //Mise à jour du bouton de démarrage et d'arrêt du jeu
 }
 /**
@@ -651,20 +652,16 @@ function jouerADT(button, freq){
     if (!adtEnCours) return;
 
     const arret = button.textContent.includes("Arrêter") || button.textContent.includes("Stop"); //Permet de déterminer si le bouton a été cliqué pour l'arrêt d'un son
+    moteuraudio.arretSon();
 
-    if (moteuraudio.sonActuel){ 
-        moteuraudio.arretSon();//Arrêt du son déjà en cours s'il y en a un
-        //Réinitialisation des boutons 
-        boutonsonun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
-        boutonsondeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
-    }
+    boutonsonun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
+    boutonsondeux.textContent = (langactuelle === "fr") ? "Deuxième son" : "Second sound";
 
-    if (arret){
-        return; //Si un arrêt a été cliqué, on sort de la fonction après le nettoyage de l'audio
-    }
+    if (arret) return;//Si un arrêt a été cliqué, on sort de la fonction après le nettoyage de l'audio
+    
     //Sinon, on joue le ton à la fréquence voulue (onde sinusoidale à -36dBFS)
     moteuraudio.jouerPitch(freq, "sine", -36);
-    button.textContent = (langactuelle === "fr") ? "Arrêter" : "Stop"; //Mise à jour du bouton
+    button.textContent = (langactuelle === "fr) ? "Arrêter" : "Stop";
 }
 /**
 *Fonction de gestion et vérification des réponses du jeu de ADT. 
@@ -687,8 +684,12 @@ function reponsesADT(index){
         mauvaises_reponses ++;
     }
 
+    setTimeout (() => {feedback.style.opacity = "0";}, 1500);
+
     if (adtEnCours) {
-        setTimeout(demarrerADT, 2500); //Attente de 2,5 secondes avant de pouvoir recommencer 
+        setTimeout(() => {
+            if (adtEnCours) demarrerADT();
+        }, 2000);
     }
 }
 /**
@@ -1042,3 +1043,4 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
