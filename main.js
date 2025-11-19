@@ -806,7 +806,7 @@ boutonADT?.addEventListener('click', () => {
 boutonsonun.addEventListener('click', () => {
     jouerADT(boutonsonun, freq_un);
 });
-;
+
 //Gestionnaire du bouton de lecture/arrêt du deuxième son
 boutonsondeux.addEventListener('click', () => {
     jouerADT(boutonsondeux, freq_deux);
@@ -1040,6 +1040,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
