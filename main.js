@@ -85,6 +85,7 @@ const boutonsondeux = $("#son_deux");
 const boutonchoixun = $("#un");
 const boutonchoixdeux = $("#deux");
 const feedback = $("#feedback");
+const adtRapport = $("#adt-rapport");
 
 
 /**
@@ -698,6 +699,8 @@ function arreterADT(){
     moteuraudio.arretSon(); //Arrêt de tous les sons
     adtEnCours = false; //Mise à jour de la variable d'état globale (jeu inactif)
     optionsADT.style.display = "none"; //Cache les boutons quand le jeu s'arrête
+
+    genererBoutonRapportADT();
     
     //Réinitialisation des boutons
     boutonsonun.textContent = (langactuelle === "fr") ? "Premier son" : "First sound";
@@ -710,11 +713,6 @@ function arreterADT(){
     //Réinitialisation du décompte
     bonnes_reponses = 0;
     mauvaises_reponses = 0;
-
-    const f_ac = freq_ac || parseFloat(curseurfreq.value); //Fréquence des acouphènes (curseur)
-    const fAc = `${f_ac} Hz`; //Mise en forme pour le rapport
-
-    genererBoutonRapportADT();
 }
 
 function genererBoutonRapportADT(){
@@ -1044,6 +1042,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
