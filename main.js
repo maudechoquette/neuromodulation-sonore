@@ -717,7 +717,7 @@ function arreterADT(){
     genererBoutonRapportADT();
 }
 
-function genererBoutonRapportADT(temps_ecoute){
+function genererBoutonRapportADT(){
     //Affichage du bouton
     adtRapport.innerHTML = '';
     const boutonRapport = document.createElement('button');
@@ -730,7 +730,7 @@ function genererBoutonRapportADT(temps_ecoute){
 
     //Génération du rapport lorsque le bouton est cliqué
     boutonRapport.addEventListener('click', () => {
-        genererRapportPDF('ADT', 'N/A', 'N/A', fAc, 'N/A', 'N/A', 'N/A', bonnes_reponses, mauvaises_reponses, nombres_parties);
+        genererRapportPDF('ADT', 'N/A', 'N/A', fAc, 'N/A', 'N/A', 'N/A', bonnes_reponses, mauvaises_reponses, nombre_parties);
     });
 
     adtRapport.appendChild(boutonRapport); //Ajout du bouton pour le rapport dans son conteneur
@@ -1044,6 +1044,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
