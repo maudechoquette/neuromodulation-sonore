@@ -684,6 +684,7 @@ function reponsesADT(index){
         mauvaises_reponses ++;
     }
 
+    feedback.style.opacity = "1";
     setTimeout (() => {feedback.style.opacity = "0";}, 1500);
 
     if (adtEnCours) {
@@ -1043,5 +1044,6 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
