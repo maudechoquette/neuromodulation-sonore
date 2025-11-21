@@ -294,11 +294,13 @@ export class ModulateurAudio {
     *@returns {{notch: BiquadFilterNode}, {lowPeak: BiquadFilterNode}, {highPeak: BiquadFilterNode}}, les noeuds contenant les filtres de traîtement (pour permettre le nettoyage de la chaine par la suite) 
     */
     ChaineTMNMT(src, f_ac){
-        //Retrait d'1/2 octave autour de la fréquence de l'acouphène
+        //Retrait d'1/2 octave autour de la fréquence de l'acouphène (1/4 d'octaves de chaque côté)
+        const notchLow = f_ac * Math.pow(2, -0.25);
+        const notchHigh = f_ac * Math.pow(2, 0.25);
         const notch = this.std.createBiquadFilter();
         notch.type = "notch";
         notch.frequency.value = f_ac;
-        notch.Q.value = 2.87; //Facteur de qualité de la largeur d'un demi-octave
+        notch.Q.value = f_ac / (notchHigh - notchLow); //Facteur de qualité de la largeur d'un demi-octave
         
         //Augmentation de 20dB des fréquences de 3/8 d'octaves de chaque côté de f_ac
         const lowPeak = this.std.createBiquadFilter();
@@ -335,10 +337,12 @@ export class ModulateurAudio {
         const {node:audio_egalise, stop: stopBoucleEgalisation} = await this.egalisationSpectre(src, f_ac);
 
         //Retrait d'1/2 octave autour de la fréquence de l'acouphène
+        const notchLow = f_ac * Math.pow(2, -0.25);
+        const notchHigh = f_ac * Math.pow(2, 0.25);
         const notch = this.std.createBiquadFilter();
         notch.type = "notch";
         notch.frequency.value = f_ac;
-        notch.Q.value = 1.4; //Largeur d'un demi-octave
+        notch.Q.value = f_ac / (notchHigh - notchLow); //Facteur de qualité de la largeur d'un demi-octave
 
         //Augmentation de 20dB des fréquences de 3/8 d'octaves de chaque côté de f_ac
         const lowPeak = this.std.createBiquadFilter();
@@ -492,6 +496,7 @@ export class ModulateurAudio {
         return buffer;
     }
 }
+
 
 
 
