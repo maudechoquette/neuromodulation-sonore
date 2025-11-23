@@ -371,7 +371,7 @@ function timer_TMNMT(temps, tmnmtInitialRestant = null){
         const minutes = Math.floor(tmnmtTempsRestant/(60*1000)).toString().padStart(2, "0");
         const secondes = Math.floor((tmnmtTempsRestant/1000)%60).toString().padStart(2, "0");
 
-        tmnmt_temps_ecoule = temps_total_ms - tmnmtTempsRestant; //Mise à jour du temps écoulé pour le rapport
+        //tmnmt_temps_ecoule = temps_total_ms - tmnmtTempsRestant; //Mise à jour du temps écoulé pour le rapport
 
         if (timerTMNMT){
             timerTMNMT.textContent = `${minutes}:${secondes}`; //Affichage
@@ -1057,6 +1057,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
