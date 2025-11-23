@@ -630,6 +630,7 @@ async function demarrerADT(){
     try {arreterTMNMT();} catch {} //Arrêt de la TMNMT si elle est en cours
     try {arreterMWT();} catch {} //Arrêt de la MWT si elle est en encours
 
+    adtEnCours = false;
     adtRapport.innerHTML=''; //Enlève le bouton de téléchargement du rapport de la manche précédente
 
     //Génération des fréquences aléatoires aigues et graves (fonction dédiée à cet effet) en fonction de la fréquence des acouphènes
@@ -1055,6 +1056,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
