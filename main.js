@@ -371,8 +371,6 @@ function timer_TMNMT(temps, tmnmtInitialRestant = null){
         const minutes = Math.floor(tmnmtTempsRestant/(60*1000)).toString().padStart(2, "0");
         const secondes = Math.floor((tmnmtTempsRestant/1000)%60).toString().padStart(2, "0");
 
-        //tmnmt_temps_ecoule = temps_total_ms - tmnmtTempsRestant; //Mise à jour du temps écoulé pour le rapport
-
         if (timerTMNMT){
             timerTMNMT.textContent = `${minutes}:${secondes}`; //Affichage
         } 
@@ -558,8 +556,6 @@ function timer_MWT(temps, mwtInitialRestant = null){
 
         const minutes = Math.floor(mwtTempsRestant/(60*1000)).toString().padStart(2, "0");
         const secondes = Math.floor((mwtTempsRestant/1000)%60).toString().padStart(2, "0");
-        
-        mwt_temps_ecoule = temps_total_ms - mwtTempsRestant;
 
         if (timerMWT){
             timerMWT.textContent = `${minutes}:${secondes}`;
@@ -976,7 +972,7 @@ const i18n = {
         fichier_perso_label: "Load your audio file",
         base_label: "Basic sounds",
         personnalise_label: "Use my own audio file",
-        description_titre: "Sound neuromodulation therapy is a non-invasice and simple method for reducing the perception of chronic tinnitus. Using this software, determine the frequency of your tinnitus and regularly follow the suggested treatments over several months to alleviate it.",
+        description_titre: "Sound neuromodulation therapy is a non-invasive and simple method for reducing the perception of chronic tinnitus. Using this software, determine the frequency of your tinnitus and regularly follow the suggested treatments over several months to alleviate it.",
         choix_therapie: "Choose the type of therapy you wish to follow.",
         description_tmnmt: "Tailor-made notched music therapy is based on removing a frequency band containing the frequency of your tinnitus from an audio file. You can choose to use the basic sounds offered by the software (white noise, pink noise and other sound waves) or import your own audio file.",
         description_mwt: "Modulated wave therapy is based on the modulation in amplitude, frequency and phase of a sinusoidal signal around the frequency of your tinnitus.",
@@ -1057,6 +1053,7 @@ $$(".lang button").forEach((bouton) => {
 //Configuration initiale de l'interface 
 freqactuelle(curseurfreq.value);
 changerlang("fr");
+
 
 
 
