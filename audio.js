@@ -28,7 +28,7 @@ export class ModulateurAudio {
     */
     async init(){
         if (this.std) return;
-        this.std = new (window.AudioContext || window.webkitAudioContext)(); //Création du contexte audio ("studio") grâce à l'interface AudioContext, pour toutes les opérations audios
+        this.std = new (window.AudioContext || window.webkitAudioContext)(); //Création du contexte audio ("studio") grâce à l'interface AudioContext, pour toutes les opérations audios. webkitAudioContext permet le fonctionnement sur Safari.
         await this.std.resume(); //Démarrage du contexte audio
 
         this.freqechantillonnage = this.std.sampleRate; //Mise à jour de la fréquence d'échantillonnage avec sampleRate, une propriété de AudioContext
@@ -496,6 +496,7 @@ export class ModulateurAudio {
         return buffer;
     }
 }
+
 
 
 
